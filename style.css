@@ -130,6 +130,13 @@ body {
 }
 .check-btn:hover, .next-btn:hover { box-shadow: var(--shadow-hover); }
 
+/* Modulfarben muessen die allgemeine Button-Grundfarbe ueberstimmen. */
+.check-btn.modul1-btn, .next-btn.modul1-btn { background: var(--color-modul1); color: #fff; }
+.check-btn.modul2-btn, .next-btn.modul2-btn { background: var(--color-modul2); color: #fff; }
+.check-btn.modul3-btn, .next-btn.modul3-btn { background: var(--color-modul3); color: #fff; }
+.check-btn.modul4-btn, .next-btn.modul4-btn { background: var(--color-modul4); color: #fff; }
+.check-btn.modul5-btn, .next-btn.modul5-btn { background: var(--color-modul5); color: #fff; }
+
 .back-btn {
     font-family: inherit; font-size: 1rem; font-weight: 600;
     padding: 10px 18px; border: none; border-radius: 12px;
@@ -147,6 +154,10 @@ body {
     background: rgba(255,255,255,.92); border-radius: 12px;
     padding: 9px 16px; font-weight: 700; box-shadow: var(--shadow);
 }
+
+.m2-fortschritt { display: flex; align-items: center; gap: 10px; }
+.m2-sterne { display: inline-flex; gap: 2px; color: #b0bec5; font-size: 1.35rem; line-height: 1; }
+.m2-stern.gefuellt { color: #43a047; }
 
 .hinweis { color: #777; font-size: .95rem; margin-top: 14px; }
 
@@ -201,15 +212,20 @@ body {
 .hand-svg { width: 128px; height: 184px; display: block; }
 .hand-label { margin-top: 4px; font-size: .85rem; font-weight: 700; color: #576574; }
 
-/* Zehnerfeld: fuenf Spalten, damit die Kraft der Fuenf sichtbar bleibt */
-.zehnerfeld { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
-.zehnerfeld-block {
-    display: grid; grid-template-columns: repeat(5, 40px); grid-auto-rows: 40px;
-    gap: 4px; background: #fff; padding: 8px; border-radius: 14px;
+/* Punkte-Streifen: zehn Plaetze nebeneinander, mit Luecke nach fuenf. */
+.zehnerfeld { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; }
+.zehner-streifen {
+    display: flex; align-items: center; gap: 6px; width: 100%; max-width: none;
+    padding: 10px; background: #fff; border-radius: 14px;
     box-shadow: 0 4px 14px rgba(0,0,0,.1); border: 3px solid #cfd8dc;
 }
-.zehnerfeld-zelle { border: 2px solid #cfd8dc; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-.zehnerfeld-zelle.voll::after { content: ''; width: 24px; height: 24px; border-radius: 50%; background: #37474f; }
+.zehner-streifen-zelle {
+    flex: 1 1 0; aspect-ratio: 1; min-width: 0;
+    border: 2px solid #b0bec5; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+}
+.zehner-streifen-luecke { flex: 0 0 10px; }
+.zehner-streifen-zelle.voll { background: #37474f; border-color: #37474f; }
 
 .punktebild {
     background: #fff; border-radius: 16px; padding: 6px;
@@ -372,8 +388,8 @@ body {
     .zahl-karte { width: 70px; height: 90px; font-size: 2.1rem; }
     .hand-svg { width: 104px; height: 150px; }
     .dice { width: 84px; height: 84px; }
-    .zehnerfeld-block { grid-template-columns: repeat(5, 32px); grid-auto-rows: 32px; }
-    .zehnerfeld-zelle.voll::after { width: 18px; height: 18px; }
+    .zehner-streifen { gap: 3px; padding: 6px; }
+    .zehner-streifen-luecke { flex-basis: 7px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -23,7 +23,6 @@
 const RUNDE_AUFGABEN = 10;      // so viele Aufgaben hat eine Runde
 
 let wartezeit = null;           // laufender setTimeout zwischen zwei Aufgaben
-let vorlesenAn = true;
 
 function showScreen(screenId) {
     /* Alles stoppen, was noch aus dem verlassenen Bildschirm laeuft -
@@ -31,7 +30,10 @@ function showScreen(screenId) {
        waehrend das Kind schon woanders ist. */
     if (wartezeit) { clearTimeout(wartezeit); wartezeit = null; }
     if (m1.timer) { clearTimeout(m1.timer); m1.timer = null; }
+    if (m1.rundenTimer) { clearInterval(m1.rundenTimer); m1.rundenTimer = null; }
+    if (m5.rundenTimer) { clearInterval(m5.rundenTimer); m5.rundenTimer = null; }
     if (m2.demo) { clearInterval(m2.demo); m2.demo = null; }
+    if (m3.rundenTimer) { clearInterval(m3.rundenTimer); m3.rundenTimer = null; }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
     karteAbwaehlen();
 
@@ -63,17 +65,18 @@ function lesVor(text) {
     window.speechSynthesis.speak(spruch);
 }
 
-/* Alle Aufgabentexte laufen hierueber, damit ein Schalter genuegt. */
+/* Automatische Ansagen bleiben aus. Vorlesen startet nur auf Knopfdruck. */
 function sprich(text) {
-    if (vorlesenAn) lesVor(text);
+    return;
 }
 
-function toggleVorlesen() {
-    vorlesenAn = !vorlesenAn;
-    if (!vorlesenAn && kannVorlesen()) window.speechSynthesis.cancel();
-    document.querySelectorAll('.vorlese-toggle').forEach(b => {
-        b.textContent = vorlesenAn ? '🔊 Vorlesen an' : '🔇 Vorlesen aus';
-    });
+function vorlesenAktuelleAufgabe() {
+    const bildschirm = document.querySelector('.screen.active');
+    if (!bildschirm) return;
+    const texte = [...bildschirm.querySelectorAll('.exercise-title, .description, .hinweis, .feedback-text')]
+        .map(el => el.textContent.trim())
+        .filter(Boolean);
+    lesVor(texte.join(' '));
 }
 
 /* ---------- Zufall ---------- */
@@ -160,10 +163,10 @@ function konfetti(menge = 40) {
 /* ---------- Einstellungen der Module ---------- */
 
 const einstellungen = {
-    m1: { raum: 5,  modus: 'zeit' },
-    m3: { raum: 5,  art: 'gemischt' },
+    m1: { raum: 5,  modus: 'eigen', bild: 'finger' },
+    m3: { raum: 10, art: 'gemischt', modus: 'eigen' },
     m4: { raum: 10, anzahl: 3, karten: 'zahlen', richtung: 'auf' },
-    m5: { raum: 5,  gruppen: 3 }
+    m5: { raum: 10, gruppen: 3, modus: 'eigen' }
 };
 
 function setzeWahl(btn, modul, schluessel, wert) {
@@ -236,9 +239,8 @@ function wuerfelSVG(augen) {
 
 function wuerfelbildHTML(n) {
     if (n <= 6) return `<div class="dice-container">${wuerfelSVG(n)}</div>`;
-    // Ueber sechs braucht es zwei Wuerfel - das uebt gleich das Buendeln mit.
-    const ersterWuerfel = zufallZahl(Math.max(1, n - 6), 6);
-    return `<div class="dice-container">${wuerfelSVG(ersterWuerfel)}${wuerfelSVG(n - ersterWuerfel)}</div>`;
+    // Ab sieben bleibt die Fuenf als Buendel sichtbar, der zweite Wuerfel zeigt den Rest.
+    return `<div class="dice-container">${wuerfelSVG(5)}${wuerfelSVG(n - 5)}</div>`;
 }
 
 /* Zeichnet eine Hand aus der Perspektive Handruecken.
@@ -334,23 +336,21 @@ function drawHandSVG(extendedCount, uid = 'h') {
     `;
 }
 
-/* Bis fuenf reicht eine Hand - die Kraft der Fuenf bleibt so sichtbar. */
+/* Jede Hand zeigt hoechstens fuenf Finger - auch bis 20 bleibt die
+   Buendelung in Fuenfergruppen sichtbar. */
 function fingerbildHTML(n) {
-    const links = Math.min(5, n);
-    const rechts = Math.max(0, n - 5);
     const uid = 'h' + n + '_' + Math.floor(Math.random() * 1000);
-
-    let html = `<div class="hands-container">
-        <div class="hand-card">
-            <svg class="hand-svg" viewBox="0 0 160 230">${drawHandSVG(links, uid + 'l')}</svg>
-            <span class="hand-label">linke Hand</span>
-        </div>`;
-    if (n > 5) {
+    let html = '<div class="hands-container">';
+    const handCount = Math.ceil(n / 5);
+    for (let i = 0; i < handCount; i++) {
+        const fingerCount = Math.min(5, n - i * 5);
+        const handBild = drawHandSVG(fingerCount, uid + i);
+        const gespiegelt = i % 2 === 1
+            ? `<g transform="translate(160, 0) scale(-1, 1)">${handBild}</g>`
+            : handBild;
         html += `<div class="hand-card">
-            <svg class="hand-svg" viewBox="0 0 160 230">
-                <g transform="translate(160, 0) scale(-1, 1)">${drawHandSVG(rechts, uid + 'r')}</g>
-            </svg>
-            <span class="hand-label">rechte Hand</span>
+            <svg class="hand-svg" viewBox="0 0 160 230">${gespiegelt}</svg>
+            <span class="hand-label">Hand ${i + 1}</span>
         </div>`;
     }
     return html + '</div>';
@@ -358,12 +358,13 @@ function fingerbildHTML(n) {
 
 function zehnerfeldHTML(n) {
     let html = '<div class="zehnerfeld">';
-    const bloecke = n > 10 ? 2 : 1;
-    for (let b = 0; b < bloecke; b++) {
+    const streifen = Math.ceil(n / 10);
+    for (let b = 0; b < streifen; b++) {
         const gefuellt = Math.max(0, Math.min(10, n - b * 10));
-        html += '<div class="zehnerfeld-block">';
+        html += '<div class="zehner-streifen">';
         for (let i = 0; i < 10; i++) {
-            html += `<div class="zehnerfeld-zelle${i < gefuellt ? ' voll' : ''}"></div>`;
+            if (i === 5) html += '<span class="zehner-streifen-luecke" aria-hidden="true"></span>';
+            html += `<div class="zehner-streifen-zelle${i < gefuellt ? ' voll' : ''}"></div>`;
         }
         html += '</div>';
     }
@@ -400,8 +401,8 @@ function mengenbildHTML(n, art) {
     return punktebildHTML(n);
 }
 
-function passendeDarstellungen(n) {
-    const arten = ['punkte', 'zehnerfeld'];
+function strukturierteDarstellungen(n) {
+    const arten = ['zehnerfeld'];
     if (n <= 12) arten.push('wuerfel');
     if (n <= 10) arten.push('finger');
     return arten;
@@ -412,26 +413,30 @@ function passendeDarstellungen(n) {
    3. Modul 1: Mengen erfassen
    ============================================================ */
 
-const m1 = { aufgabe: 0, richtig: 0, zahl: 0, art: 'punkte', timer: null, blitz: false };
+const m1 = { aufgabe: 0, gesamt: 0, richtig: 0, zahl: 0, art: 'zehnerfeld', timer: null, rundenTimer: null, restzeit: 0, blitz: false };
+const M1_RUNDENZEIT = 120;
 
 function m1Start() {
     m1.aufgabe = 0;
+    m1.gesamt = 0;
     m1.richtig = 0;
     showScreen('m1GameScreen');
     m1Neu();
+    m1RundenTimerStarten();
 }
 
 function m1Neu() {
     m1.aufgabe++;
-    if (m1.aufgabe > RUNDE_AUFGABEN) {
+    m1.blitz = einstellungen.m1.modus === 'zeit';
+    if (!m1.blitz && m1.aufgabe > RUNDE_AUFGABEN) {
+        m1RundenTimerStoppen();
         zeigeErgebnis('Mengen erfassen', m1.richtig, RUNDE_AUFGABEN, 'modul1-color', m1Start);
         return;
     }
 
     const raum = einstellungen.m1.raum;
-    m1.blitz = einstellungen.m1.modus === 'blitz';
     m1.zahl = zufallZahl(1, raum);
-    m1.art = zufallAus(passendeDarstellungen(m1.zahl));
+    m1.art = einstellungen.m1.bild;
 
     document.getElementById('m1Score').textContent = m1.richtig;
     document.getElementById('m1Nummer').textContent = m1.aufgabe;
@@ -459,10 +464,40 @@ function m1Zeigen() {
     if (m1.blitz) {
         /* Beim Blitzblick verschwindet das Bild wieder. Das zwingt zum
            Erfassen auf einen Blick statt zum Abzaehlen mit dem Finger. */
-        const dauer = einstellungen.m1.raum <= 5 ? 1800 : 2400;
+        const dauer = einstellungen.m1.raum <= 5 ? 3000 : 4000;
         if (m1.timer) clearTimeout(m1.timer);
         m1.timer = setTimeout(m1Verdecken, dauer);
     }
+}
+
+function m1RundenTimerStarten() {
+    m1RundenTimerStoppen();
+    const anzeige = document.getElementById('m1Rundenzeit');
+    const wert = document.getElementById('m1RundenzeitWert');
+    anzeige.hidden = !m1.blitz;
+    if (!m1.blitz) return;
+    m1.restzeit = M1_RUNDENZEIT;
+    wert.textContent = m1ZeitText();
+    m1.rundenTimer = setInterval(() => {
+        m1.restzeit--;
+        wert.textContent = m1ZeitText();
+        if (m1.restzeit <= 0) m1RundeBeenden();
+    }, 1000);
+}
+
+function m1ZeitText() {
+    return Math.floor(m1.restzeit / 60) + ':' + String(m1.restzeit % 60).padStart(2, '0');
+}
+
+function m1RundenTimerStoppen() {
+    if (m1.rundenTimer) { clearInterval(m1.rundenTimer); m1.rundenTimer = null; }
+}
+
+function m1RundeBeenden() {
+    m1RundenTimerStoppen();
+    if (m1.timer) { clearTimeout(m1.timer); m1.timer = null; }
+    if (wartezeit) { clearTimeout(wartezeit); wartezeit = null; }
+    zeigeErgebnis('Mengen erfassen', m1.richtig, m1.gesamt, 'modul1-color', m1Start);
 }
 
 function m1Verdecken() {
@@ -478,6 +513,7 @@ function m1NochmalBlitzen() {
 
 function m1Antwort(zahl, btn) {
     document.querySelectorAll('#m1Optionen .zahl-option').forEach(b => b.disabled = true);
+    m1.gesamt++;
     if (m1.timer) { clearTimeout(m1.timer); m1.timer = null; }
 
     if (zahl === m1.zahl) {
@@ -486,7 +522,7 @@ function m1Antwort(zahl, btn) {
         document.getElementById('m1Score').textContent = m1.richtig;
         setzeFeedback('m1Feedback', 'Richtig! Es sind ' + m1.zahl + '. ⭐', 'richtig');
         sprich('Richtig! Es sind ' + m1.zahl + '.');
-        wartezeit = setTimeout(m1Neu, 1400);
+        wartezeit = setTimeout(m1Neu, 800);
     } else {
         btn.classList.add('falsch');
         document.querySelectorAll('#m1Optionen .zahl-option').forEach(b => {
@@ -495,9 +531,10 @@ function m1Antwort(zahl, btn) {
         /* Das Bild wieder aufdecken: das Kind soll sehen, warum es anders war. */
         document.getElementById('m1Buehne').classList.remove('verdeckt');
         document.getElementById('m1Buehne').innerHTML = mengenbildHTML(m1.zahl, m1.art);
-        setzeFeedback('m1Feedback', 'Es sind ' + m1.zahl + '. Schau noch einmal hin.', 'falsch');
+        setzeFeedback('m1Feedback', 'Richtig wäre die ' + m1.zahl + '.', 'richtig');
         sprich('Es sind ' + m1.zahl + '. Schau noch einmal hin.');
-        document.getElementById('m1Next').hidden = false;
+        document.getElementById('m1Next').hidden = true;
+        wartezeit = setTimeout(m1Neu, 1400);
     }
 }
 
@@ -561,8 +598,8 @@ const ZIFFERN = {
         striche: [kette(bogen(50, 40, 28, 26, 200, 450, 26), bogen(50, 96, 28, 28, 270, 520, 26))]
     },
     4: {
-        spruch: 'Schräg nach unten, nach rechts, und dann von oben nach unten: die Vier.',
-        striche: [kette(linie([64, 14], [16, 88], 14), linie([16, 88], [88, 88], 12)), linie([64, 14], [64, 126], 18)]
+        spruch: 'Schräg von oben links nach unten, dann nach rechts, und zum Schluss von oben nach unten: die Vier.',
+        striche: [kette(linie([28, 14], [18, 88], 14), linie([18, 88], [88, 88], 12)), linie([64, 14], [64, 126], 18)]
     },
     5: {
         spruch: 'Erst nach unten, dann ein dicker Bauch, zum Schluss der Hut: die Fünf.',
@@ -573,26 +610,29 @@ const ZIFFERN = {
         striche: [kette(bogen(52, 74, 28, 54, -72, -270, 26), bogen(52, 100, 28, 28, 90, -160, 26))]
     },
     7: {
-        spruch: 'Ein Strich nach rechts und schräg nach unten: die Sieben.',
-        striche: [kette(linie([18, 20], [84, 20], 12), linie([84, 20], [40, 126], 18))]
+        spruch: 'Oben nach rechts, schräg nach unten und zum Schluss eine Querlinie nach rechts: die Sieben.',
+        striche: [kette(linie([18, 20], [84, 20], 12), linie([84, 20], [40, 126], 18)), linie([28, 78], [76, 78], 12)]
     },
     8: {
-        spruch: 'Nach links oben herum, unten herum und wieder hinauf: die Acht.',
+        spruch: 'Oben herum, durch die Mitte, unten herum, kreuzen und oben schließen: die Acht.',
         striche: [kette(bogen(50, 46, 25, 25, -51, -270, 18), bogen(50, 99, 28, 28, -90, -450, 30), bogen(50, 46, 25, 25, -270, -411, 18))]
     },
     9: {
-        spruch: 'Ein Kringel nach links herum und ein Strich nach unten: die Neun.',
-        striche: [kette(bogen(50, 44, 26, 28, 0, -360, 30), linie([76, 44], [76, 126], 18))]
+        spruch: 'Erst den Kreis ganz schließen, dann nach unten: die Neun.',
+        striche: [kette(bogen(50, 44, 26, 28, 0, -360, 30), linie([76, 44], [76, 104], 14), bogen(55, 104, 21, 22, 0, 135, 14))]
     }
 };
 
 const M2_TOLERANZ = 15;         // so nah muss der Finger am Kontrollpunkt sein
 const M2_START_TOLERANZ = 20;   // beim gruenen Startpunkt etwas grosszuegiger
+const M2_BAHN_TOLERANZ = 24;    // ausserhalb dieser Entfernung ist es kein Nachspuren
 
 const m2 = {
     liste: [1], index: 0, ziffer: 1,
+    alleAusgewaehlt: false,
     durchgang: 1, durchgaenge: 3, ohneHilfe: false,
-    strich: 0, ziel: 0, zeichnend: false, spur: [],
+    strich: 0, ziel: 0, zeichnend: false, endpunktErreicht: false,
+    spur: [], spurLaenge: 0, spurZuWeit: false,
     punkte: [], fertig: false, demo: null,
     geschafft: 0, versuche: 0
 };
@@ -607,6 +647,22 @@ function strichLaenge(strich) {
         laenge += Math.hypot(strich[i][0] - strich[i - 1][0], strich[i][1] - strich[i - 1][1]);
     }
     return laenge;
+}
+
+function punktZuLinie(punkt, start, ende) {
+    const dx = ende[0] - start[0];
+    const dy = ende[1] - start[1];
+    const laengeQuadrat = dx * dx + dy * dy;
+    const t = laengeQuadrat ? Math.max(0, Math.min(1, ((punkt.x - start[0]) * dx + (punkt.y - start[1]) * dy) / laengeQuadrat)) : 0;
+    return Math.hypot(punkt.x - (start[0] + t * dx), punkt.y - (start[1] + t * dy));
+}
+
+function abstandZurBahn(punkt, bahn) {
+    let kleinster = Infinity;
+    for (let i = 1; i < bahn.length; i++) {
+        kleinster = Math.min(kleinster, punktZuLinie(punkt, bahn[i - 1], bahn[i]));
+    }
+    return kleinster;
 }
 
 /* Kontrollpunkte im gleichen Abstand auf dem Strich verteilen. */
@@ -647,8 +703,11 @@ function m2Aufbauen() {
 }
 
 function m2Start(was) {
-    m2.liste = was === 'alle' ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 0] : [was];
-    m2.durchgaenge = m2.liste.length > 1 ? 1 : 3;
+    m2.alleAusgewaehlt = was === 'alle';
+    m2.liste = was === 'alle'
+        ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
+        : [was];
+    m2.durchgaenge = 6;
     m2.index = 0;
     m2.durchgang = 1;
     m2.geschafft = 0;
@@ -667,15 +726,33 @@ function m2Laden() {
         const anzahl = Math.max(4, Math.min(10, Math.round(strichLaenge(s) / 22)));
         return gleichmaessigePunkte(s, anzahl);
     });
+    if (m2.ziffer === 8 && m2.punkte[0].length === 10) {
+        /* Die Bahn bleibt glatt; nur die Kontrollpunkte folgen der
+           kindgerechten Schreibfolge der Acht. */
+        const reihenfolge = [0, 1, 2, 7, 6, 5, 4, 3, 8, 9];
+        m2.punkte = [reihenfolge.map(i => m2.punkte[0][i])];
+    }
 
     document.getElementById('m2Prompt').textContent = 'Schreibe die ' + m2.ziffer;
     document.getElementById('m2Spruch').textContent = daten.spruch;
-    document.getElementById('m2Fortschritt').textContent = m2.liste.length > 1
-        ? 'Ziffer ' + (m2.index + 1) + ' von ' + m2.liste.length
-        : 'Durchgang ' + m2.durchgang + ' von ' + m2.durchgaenge;
+    m2FortschrittAnzeigen();
 
     m2Neu();
     sprich('Schreibe die ' + m2.ziffer + '. ' + daten.spruch);
+}
+
+function m2FortschrittAnzeigen(erledigt = m2.durchgang - 1) {
+    const zifferText = document.getElementById('m2ZifferFortschritt');
+    const sterne = [...document.querySelectorAll('#m2Fortschritt .m2-stern')];
+    if (!zifferText || !sterne.length) return;
+    zifferText.textContent = m2.liste.length > 1
+        ? 'Ziffer ' + (m2.index + 1) + ' von ' + m2.liste.length
+        : 'Ziffer ' + m2.ziffer;
+    sterne.forEach((stern, i) => {
+        const gefuellt = i < erledigt;
+        stern.textContent = gefuellt ? '★' : '☆';
+        stern.classList.toggle('gefuellt', gefuellt);
+    });
 }
 
 /* Setzt nur die Spur zurueck, die Ziffer bleibt dieselbe. */
@@ -683,6 +760,9 @@ function m2Neu() {
     m2.strich = 0;
     m2.ziel = 0;
     m2.spur = [];
+    m2.endpunktErreicht = false;
+    m2.spurLaenge = 0;
+    m2.spurZuWeit = false;
     m2.zeichnend = false;
     m2.fertig = false;
     m2.versuche = 0;
@@ -765,6 +845,9 @@ function m2Down(ev) {
     ev.preventDefault();
     m2.zeichnend = true;
     m2.spur = [p];
+    m2.endpunktErreicht = false;
+    m2.spurLaenge = 0;
+    m2.spurZuWeit = false;
     m2.ziel = 0;
     setzeFeedback('m2Feedback', '');
     svg.setPointerCapture(ev.pointerId);
@@ -776,6 +859,11 @@ function m2Move(ev) {
     ev.preventDefault();
     const svg = document.getElementById('m2Svg');
     const p = svgPunkt(svg, ev);
+    const letzte = m2.spur[m2.spur.length - 1];
+    m2.spurLaenge += Math.hypot(p.x - letzte.x, p.y - letzte.y);
+    if (abstandZurBahn(p, ZIFFERN[m2.ziffer].striche[m2.strich]) > M2_BAHN_TOLERANZ) {
+        m2.spurZuWeit = true;
+    }
     m2.spur.push(p);
     const spurPfad = document.getElementById('m2Spur' + m2.strich);
     if (spurPfad) spurPfad.setAttribute('d', pfadAusSpur(m2.spur));
@@ -786,14 +874,35 @@ function m2Fortsetzen(p) {
     const liste = m2.punkte[m2.strich];
     while (m2.ziel < liste.length && abstand(p, liste[m2.ziel]) <= M2_TOLERANZ) m2.ziel++;
     m2Marken();
-    if (m2.ziel >= liste.length) m2StrichFertig();
+    if (m2.ziel >= liste.length) {
+        /* Der blaue Strich bleibt bis zum letzten Punkt sichtbar. Erst beim
+           Loslassen an diesem Endpunkt ist der Strich wirklich fertig. */
+        m2.endpunktErreicht = true;
+        m2Marken();
+    }
 }
 
 function m2StrichFertig() {
     m2.zeichnend = false;
+    const sollLaenge = strichLaenge(ZIFFERN[m2.ziffer].striche[m2.strich]);
+    if (m2.spurZuWeit || m2.spurLaenge < sollLaenge * .55) {
+        const spurPfad = document.getElementById('m2Spur' + m2.strich);
+        if (spurPfad) spurPfad.setAttribute('d', '');
+        m2.spur = [];
+        m2.ziel = 0;
+        m2.endpunktErreicht = false;
+        m2.spurLaenge = 0;
+        m2.spurZuWeit = false;
+        m2Marken();
+        m2.versuche++;
+        setzeFeedback('m2Feedback', 'Übe nochmal. Bleibe im grauen Bereich.', 'falsch');
+        if (m2.versuche === 2) sprich('Bleib auf der grauen Bahn und male nicht die ganze Fläche aus.');
+        return;
+    }
     if (m2.strich + 1 < ZIFFERN[m2.ziffer].striche.length) {
         m2.strich++;
         m2.ziel = 0;
+        m2.endpunktErreicht = false;
         m2.spur = [];
         m2Marken();
         setzeFeedback('m2Feedback', 'Gut! Jetzt der zweite Strich. ✌️', 'richtig');
@@ -805,6 +914,10 @@ function m2StrichFertig() {
 
 function m2Up() {
     if (!m2.zeichnend) return;
+    if (m2.endpunktErreicht) {
+        m2StrichFertig();
+        return;
+    }
     m2.zeichnend = false;
     /* Mitten im Strich losgelassen: der Strich wird neu begonnen. Eine
        Ziffer entsteht in einem Zug, sonst prägt sich der Weg nicht ein. */
@@ -813,12 +926,16 @@ function m2Up() {
     const hatteBegonnen = m2.ziel > 1;
     m2.spur = [];
     m2.ziel = 0;
+    m2.endpunktErreicht = false;
     m2Marken();
     /* Ein blosses Antippen des Startpunktes ist kein Fehlversuch - sonst
        wird ein Kind getadelt, das nur kurz hingetippt hat. */
     if (!hatteBegonnen) return;
     m2.versuche++;
-    setzeFeedback('m2Feedback', 'Bleib auf der Bahn und lass nicht los. Noch einmal! 💪', 'falsch');
+    const rueckmeldung = m2.spurZuWeit
+        ? 'Übe nochmal. Bleibe im grauen Bereich.'
+        : 'Bleib auf der Bahn und lass nicht los. Noch einmal! 💪';
+    setzeFeedback('m2Feedback', rueckmeldung, 'falsch');
     if (m2.versuche === 2) sprich('Schau dir an, wie es geht. Tippe auf: Zeig mir wie.');
 }
 
@@ -826,9 +943,10 @@ function m2Geschafft() {
     m2.fertig = true;
     m2.geschafft++;
     m2Marken();
+    m2FortschrittAnzeigen(m2.durchgang);
     setzeFeedback('m2Feedback', 'Super! Das ist eine schöne ' + m2.ziffer + '. ⭐', 'richtig');
     sprich('Super! Das ist eine schöne ' + m2.ziffer + '.');
-    konfetti(20);
+    if (m2.durchgang === m2.durchgaenge) konfetti(20);
     document.getElementById('m2Next').hidden = false;
 }
 
@@ -842,7 +960,7 @@ function m2Weiter() {
     if (m2.index >= m2.liste.length) {
         const gesamt = m2.liste.length * m2.durchgaenge;
         zeigeErgebnis('Ziffern schreiben', m2.geschafft, gesamt, 'modul2-color',
-            () => m2Start(m2.liste.length > 1 ? 'alle' : m2.liste[0]));
+            () => m2Start(m2.alleAusgewaehlt ? 'alle' : m2.liste[0]));
         return;
     }
     m2Laden();
@@ -883,18 +1001,23 @@ function m2Vormachen() {
    5. Modul 3: Dazulegen oder wegstreichen
    ============================================================ */
 
-const m3 = { aufgabe: 0, richtig: 0, ziel: 0, ding: null, plaetze: [], versuche: 0, fertig: false };
+const m3 = { aufgabe: 0, gesamt: 0, richtig: 0, ziel: 0, ding: null, plaetze: [], versuche: 0, gezaehlt: false, fertig: false, rundenTimer: null, restzeit: 0 };
+const M3_RUNDENZEIT = 120;
 
 function m3Start() {
     m3.aufgabe = 0;
+    m3.gesamt = 0;
     m3.richtig = 0;
     showScreen('m3GameScreen');
     m3Neu();
+    m3RundenTimerStarten();
 }
 
 function m3Neu() {
     m3.aufgabe++;
-    if (m3.aufgabe > RUNDE_AUFGABEN) {
+    m3.aufZeit = einstellungen.m3.modus === 'zeit';
+    if (!m3.aufZeit && m3.aufgabe > RUNDE_AUFGABEN) {
+        m3RundenTimerStoppen();
         zeigeErgebnis('Dazulegen und wegstreichen', m3.richtig, RUNDE_AUFGABEN, 'modul3-color', m3Start);
         return;
     }
@@ -905,6 +1028,7 @@ function m3Neu() {
     m3.ziel = zufallZahl(2, raum);
     m3.ding = zufallAus(DINGE);
     m3.versuche = 0;
+    m3.gezaehlt = false;
     m3.fertig = false;
 
     let vorhanden;
@@ -929,6 +1053,49 @@ function m3Neu() {
 
     m3Zeichnen();
     sprich('Es sollen ' + m3.ziel + ' ' + wort + ' sein. Lege dazu oder streiche durch.');
+}
+
+function m3RundenTimerStarten() {
+    m3RundenTimerStoppen();
+    const zeitAnzeige = document.getElementById('m3Zeit');
+    const zeitWert = document.getElementById('m3ZeitWert');
+    zeitAnzeige.hidden = !m3.aufZeit;
+    if (!m3.aufZeit) return;
+    m3.restzeit = M3_RUNDENZEIT;
+    zeitWert.textContent = m3ZeitText();
+    m3.rundenTimer = setInterval(() => {
+        m3.restzeit--;
+        zeitWert.textContent = m3ZeitText();
+        if (m3.restzeit <= 0) m3RundeBeenden();
+    }, 1000);
+}
+
+function m3ZeitText() {
+    return Math.floor(m3.restzeit / 60) + ':' + String(m3.restzeit % 60).padStart(2, '0');
+}
+
+function m3RundenTimerStoppen() {
+    if (m3.rundenTimer) { clearInterval(m3.rundenTimer); m3.rundenTimer = null; }
+}
+
+function m3LoesungZeigen(text, spruch) {
+    m3.fertig = true;
+    let offen = m3.ziel;
+    m3.plaetze.forEach(platz => {
+        if (offen > 0) { platz.voll = true; platz.gestrichen = false; offen--; }
+        else if (platz.voll) { platz.gestrichen = true; }
+    });
+    m3Zeichnen();
+    setzeFeedback('m3Feedback', text, 'falsch');
+    sprich(spruch);
+    document.getElementById('m3Check').hidden = true;
+    wartezeit = setTimeout(m3Neu, 1200);
+}
+
+function m3RundeBeenden() {
+    m3RundenTimerStoppen();
+    if (wartezeit) { clearTimeout(wartezeit); wartezeit = null; }
+    zeigeErgebnis('Dazulegen und wegstreichen', m3.richtig, m3.gesamt, 'modul3-color', m3Start);
 }
 
 function m3Zeichnen() {
@@ -963,6 +1130,7 @@ function m3Anzahl() {
 
 function m3Pruefen() {
     if (m3.fertig) return;
+    if (!m3.gezaehlt) { m3.gesamt++; m3.gezaehlt = true; }
     const anzahl = m3Anzahl();
 
     if (anzahl === m3.ziel) {
@@ -973,7 +1141,7 @@ function m3Pruefen() {
         sprich('Richtig! Genau ' + m3.ziel + '.');
         konfetti(20);
         document.getElementById('m3Check').hidden = true;
-        wartezeit = setTimeout(m3Neu, 1600);
+        wartezeit = setTimeout(m3Neu, 900);
         return;
     }
 
@@ -991,17 +1159,7 @@ function m3Pruefen() {
 
     /* Nach dem zweiten Versuch loest sich die Aufgabe selbst auf -
        kein Kind soll vor einer verschlossenen Tuer sitzen bleiben. */
-    m3.fertig = true;
-    let offen = m3.ziel;
-    m3.plaetze.forEach(platz => {
-        if (offen > 0) { platz.voll = true; platz.gestrichen = false; offen--; }
-        else if (platz.voll) { platz.gestrichen = true; }
-    });
-    m3Zeichnen();
-    setzeFeedback('m3Feedback', 'So sehen ' + m3.ziel + ' aus. Zähle mit: 1, 2, 3 …', 'falsch');
-    sprich('So sehen ' + m3.ziel + ' aus.');
-    document.getElementById('m3Check').hidden = true;
-    document.getElementById('m3Next').hidden = false;
+    m3LoesungZeigen('So sehen ' + m3.ziel + ' aus. Zähle mit: 1, 2, 3 …', 'So sehen ' + m3.ziel + ' aus.');
 }
 
 function m3Weiter() {
@@ -1230,7 +1388,7 @@ function m4Pruefen() {
         sprich('Richtig geordnet! ' + m4.loesung.join(', '));
         konfetti(20);
         document.getElementById('m4Check').hidden = true;
-        wartezeit = setTimeout(m4Neu, 1900);
+        wartezeit = setTimeout(m4Neu, 1000);
         return;
     }
 
@@ -1271,18 +1429,23 @@ function m4Weiter() {
    die Zahlenkarten. Hier wird das Zaehlergebnis zur Ziffer.
    ============================================================ */
 
-const m5 = { aufgabe: 0, richtig: 0, gruppen: [], versuche: 0, fertig: false };
+const m5 = { aufgabe: 0, gesamt: 0, richtig: 0, gruppen: [], versuche: 0, gezaehlt: false, fertig: false, rundenTimer: null, restzeit: 0 };
+const M5_RUNDENZEIT = 120;
 
 function m5Start() {
     m5.aufgabe = 0;
+    m5.gesamt = 0;
     m5.richtig = 0;
     showScreen('m5GameScreen');
     m5Neu();
+    m5RundenTimerStarten();
 }
 
 function m5Neu() {
     m5.aufgabe++;
-    if (m5.aufgabe > RUNDE_AUFGABEN) {
+    m5.aufZeit = einstellungen.m5.modus === 'zeit';
+    if (!m5.aufZeit && m5.aufgabe > RUNDE_AUFGABEN) {
+        m5RundenTimerStoppen();
         zeigeErgebnis('Bilder und Zahlen', m5.richtig, RUNDE_AUFGABEN, 'modul5-color', m5Start);
         return;
     }
@@ -1292,6 +1455,7 @@ function m5Neu() {
     const dinge = mische(DINGE).slice(0, s.gruppen);
     m5.gruppen = zahlen.map((n, i) => ({ zahl: n, ding: dinge[i] }));
     m5.versuche = 0;
+    m5.gezaehlt = false;
     m5.fertig = false;
 
     document.getElementById('m5Score').textContent = m5.richtig;
@@ -1301,21 +1465,18 @@ function m5Neu() {
     setzeFeedback('m5Feedback', '');
 
     document.getElementById('m5Gruppen').innerHTML = m5.gruppen.map(g => {
-        const bilder = Array.from({ length: g.zahl }, () => `<span>${g.ding.emoji}</span>`).join('');
         return `<div class="bild-gruppe">
-                    <div class="bild-menge">${bilder}</div>
+                    <div class="bild-menge">${zehnerfeldHTML(g.zahl)}</div>
                     <div class="karten-slot" data-zahl="${g.zahl}"><span class="slot-nummer">?</span></div>
                 </div>`;
     }).join('');
 
-    /* Bei groesserem Zahlenraum kommt eine Karte zu viel dazu, damit die
-       letzte Zuordnung nicht einfach uebrig bleibt. */
+     /* Eine falsche Karte bleibt uebrig, damit nicht nur nach Ausschluss
+         zugeordnet werden kann. */
     const kartenZahlen = [...zahlen];
-    if (s.raum > 5) {
-        const rest = [];
-        for (let i = 1; i <= s.raum; i++) if (!zahlen.includes(i)) rest.push(i);
-        if (rest.length) kartenZahlen.push(zufallAus(rest));
-    }
+     const rest = [];
+     for (let i = 1; i <= s.raum; i++) if (!zahlen.includes(i)) rest.push(i);
+     if (rest.length) kartenZahlen.push(zufallAus(rest));
 
     const tisch = document.getElementById('m5Tisch');
     tisch.innerHTML = mische(kartenZahlen).map(z => karteHTML(z, false)).join('');
@@ -1325,8 +1486,38 @@ function m5Neu() {
     sprich('Zähle die Bilder. Lege zu jedem Bild die passende Zahl.');
 }
 
+function m5RundenTimerStarten() {
+    m5RundenTimerStoppen();
+    const zeitAnzeige = document.getElementById('m5Zeit');
+    const zeitWert = document.getElementById('m5ZeitWert');
+    zeitAnzeige.hidden = !m5.aufZeit;
+    if (!m5.aufZeit) return;
+    m5.restzeit = M5_RUNDENZEIT;
+    zeitWert.textContent = m5ZeitText();
+    m5.rundenTimer = setInterval(() => {
+        m5.restzeit--;
+        zeitWert.textContent = m5ZeitText();
+        if (m5.restzeit <= 0) m5RundeBeenden();
+    }, 1000);
+}
+
+function m5ZeitText() {
+    return Math.floor(m5.restzeit / 60) + ':' + String(m5.restzeit % 60).padStart(2, '0');
+}
+
+function m5RundenTimerStoppen() {
+    if (m5.rundenTimer) { clearInterval(m5.rundenTimer); m5.rundenTimer = null; }
+}
+
+function m5RundeBeenden() {
+    m5RundenTimerStoppen();
+    if (wartezeit) { clearTimeout(wartezeit); wartezeit = null; }
+    zeigeErgebnis('Bilder und Zahlen', m5.richtig, m5.gesamt, 'modul5-color', m5Start);
+}
+
 function m5Pruefen() {
     if (m5.fertig) return;
+    if (!m5.gezaehlt) { m5.gesamt++; m5.gezaehlt = true; }
     const slots = [...document.querySelectorAll('#m5Gruppen .karten-slot')];
     const belegt = slots.map(slot => slot.querySelector('.zahl-karte'));
 
@@ -1351,14 +1542,7 @@ function m5Pruefen() {
         sprich('Alles richtig zugeordnet!');
         konfetti(20);
         document.getElementById('m5Check').hidden = true;
-        wartezeit = setTimeout(m5Neu, 1800);
-        return;
-    }
-
-    m5.versuche++;
-    if (m5.versuche === 1) {
-        setzeFeedback('m5Feedback', 'Schau die roten noch einmal an. Zähle mit dem Finger mit.', 'falsch');
-        sprich('Schau die roten noch einmal an. Zähle mit dem Finger mit.');
+        wartezeit = setTimeout(m5Neu, 1000);
         return;
     }
 
@@ -1369,14 +1553,16 @@ function m5Pruefen() {
         aktiverTisch.appendChild(k);   // erst alle Plaetze raeumen, sonst
     });                                // landen zwei Karten im selben Platz
     slots.forEach(slot => {
-        slot.classList.remove('richtig', 'falsch');
+        slot.classList.remove('falsch');
+        slot.classList.add('richtig');
         const passende = karten[slot.dataset.zahl];
         if (passende) slot.appendChild(passende);
     });
-    setzeFeedback('m5Feedback', 'So gehören die Zahlen zu den Bildern.', 'falsch');
+    setzeFeedback('m5Feedback', 'So gehören die Zahlen zu den Bildern.', 'richtig');
     sprich('So gehören die Zahlen zu den Bildern.');
     document.getElementById('m5Check').hidden = true;
-    document.getElementById('m5Next').hidden = false;
+    document.getElementById('m5Next').hidden = true;
+    wartezeit = setTimeout(m5Neu, 1600);
 }
 
 function m5Weiter() {

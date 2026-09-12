@@ -84,19 +84,28 @@
                 <p class="description">Du siehst ein Bild. Wie viele sind es?</p>
 
                 <div class="wahl-block">
-                    <span class="wahl-titel">Bis wohin?</span>
+                    <span class="wahl-titel">Wie möchtest du üben?</span>
                     <div class="wahl-reihe">
-                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m1','raum',5)">bis 5</button>
-                        <button class="wahl-btn" onclick="setzeWahl(this,'m1','raum',10)">bis 10</button>
-                        <button class="wahl-btn" onclick="setzeWahl(this,'m1','raum',20)">bis 20</button>
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m1','modus','eigen')">🌿 Eigenes Tempo</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m1','modus','zeit')">⚡ Auf Zeit</button>
                     </div>
                 </div>
 
                 <div class="wahl-block">
-                    <span class="wahl-titel">Wie lange siehst du das Bild?</span>
+                    <span class="wahl-titel">Bis wohin?</span>
                     <div class="wahl-reihe">
-                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m1','modus','zeit')">🌿 So lange du willst</button>
-                        <button class="wahl-btn" onclick="setzeWahl(this,'m1','modus','blitz')">⚡ Blitzblick</button>
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m1','raum',5)"><span class="wahl-symbol">★</span> bis 5</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m1','raum',10)"><span class="wahl-symbol">★★</span> bis 10</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m1','raum',20)"><span class="wahl-symbol">★★★</span> bis 20</button>
+                    </div>
+                </div>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">Welche Bilder möchtest du sehen?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m1','bild','finger')">🖐 Finger</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m1','bild','wuerfel')">🎲 Würfel</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m1','bild','zehnerfeld')">⚫ Punktebilder</button>
                     </div>
                 </div>
 
@@ -111,8 +120,9 @@
     <div id="m1GameScreen" class="screen">
         <div class="header">
             <button class="back-btn" onclick="showScreen('m1SetupScreen')"><span class="arrow">←</span> Zurück</button>
-            <button class="tool-btn vorlese-toggle" onclick="toggleVorlesen()">🔊 Vorlesen an</button>
+            <button class="tool-btn vorlese-toggle" onclick="vorlesenAktuelleAufgabe()" aria-label="Aufgabe vorlesen" title="Aufgabe vorlesen">🔊</button>
             <div class="progress">⭐ <span id="m1Score">0</span> / <span id="m1Nummer">1</span></div>
+            <div class="progress" id="m1Rundenzeit" hidden>⏱ Restzeit: <span id="m1RundenzeitWert">2:00</span></div>
         </div>
         <div class="content">
             <div class="task-area modul1-border">
@@ -152,8 +162,14 @@
     <div id="m2GameScreen" class="screen">
         <div class="header">
             <button class="back-btn" onclick="showScreen('m2SelectScreen')"><span class="arrow">←</span> Zurück</button>
-            <button class="tool-btn vorlese-toggle" onclick="toggleVorlesen()">🔊 Vorlesen an</button>
-            <div class="progress" id="m2Fortschritt">Ziffer 1</div>
+            <button class="tool-btn vorlese-toggle" onclick="vorlesenAktuelleAufgabe()" aria-label="Aufgabe vorlesen" title="Aufgabe vorlesen">🔊</button>
+            <div class="progress m2-fortschritt" id="m2Fortschritt" aria-label="Fortschritt">
+                <span id="m2ZifferFortschritt">Ziffer 1</span>
+                <span class="m2-sterne" aria-hidden="true">
+                    <span class="m2-stern">☆</span><span class="m2-stern">☆</span><span class="m2-stern">☆</span>
+                    <span class="m2-stern">☆</span><span class="m2-stern">☆</span><span class="m2-stern">☆</span>
+                </span>
+            </div>
         </div>
         <div class="content">
             <div class="task-area modul2-border">
@@ -186,20 +202,10 @@
                 <p class="description">Es sollen genau so viele sein, wie die Zahl sagt.</p>
 
                 <div class="wahl-block">
-                    <span class="wahl-titel">Bis wohin?</span>
+                    <span class="wahl-titel">Wie möchtest du üben?</span>
                     <div class="wahl-reihe">
-                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m3','raum',5)">bis 5</button>
-                        <button class="wahl-btn" onclick="setzeWahl(this,'m3','raum',10)">bis 10</button>
-                        <button class="wahl-btn" onclick="setzeWahl(this,'m3','raum',20)">bis 20</button>
-                    </div>
-                </div>
-
-                <div class="wahl-block">
-                    <span class="wahl-titel">Was möchtest du üben?</span>
-                    <div class="wahl-reihe">
-                        <button class="wahl-btn" onclick="setzeWahl(this,'m3','art','dazu')">➕ Dazulegen</button>
-                        <button class="wahl-btn" onclick="setzeWahl(this,'m3','art','weg')">❌ Wegstreichen</button>
-                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m3','art','gemischt')">🔀 Gemischt</button>
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m3','modus','eigen')">🌿 Eigenes Tempo</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m3','modus','zeit')">⚡ Auf Zeit</button>
                     </div>
                 </div>
 
@@ -214,8 +220,9 @@
     <div id="m3GameScreen" class="screen">
         <div class="header">
             <button class="back-btn" onclick="showScreen('m3SetupScreen')"><span class="arrow">←</span> Zurück</button>
-            <button class="tool-btn vorlese-toggle" onclick="toggleVorlesen()">🔊 Vorlesen an</button>
+            <button class="tool-btn vorlese-toggle" onclick="vorlesenAktuelleAufgabe()" aria-label="Aufgabe vorlesen" title="Aufgabe vorlesen">🔊</button>
             <div class="progress">⭐ <span id="m3Score">0</span> / <span id="m3Nummer">1</span></div>
+            <div class="progress" id="m3Zeit" hidden>⏱ Restzeit: <span id="m3ZeitWert">2:00</span></div>
         </div>
         <div class="content">
             <div class="task-area modul3-border">
@@ -294,7 +301,7 @@
     <div id="m4GameScreen" class="screen">
         <div class="header">
             <button class="back-btn" onclick="showScreen('m4SetupScreen')"><span class="arrow">←</span> Zurück</button>
-            <button class="tool-btn vorlese-toggle" onclick="toggleVorlesen()">🔊 Vorlesen an</button>
+            <button class="tool-btn vorlese-toggle" onclick="vorlesenAktuelleAufgabe()" aria-label="Aufgabe vorlesen" title="Aufgabe vorlesen">🔊</button>
             <div class="progress">⭐ <span id="m4Score">0</span> / <span id="m4Nummer">1</span></div>
         </div>
         <div class="content">
@@ -329,18 +336,10 @@
                 <p class="description">Welche Zahl passt zu welchem Bild?</p>
 
                 <div class="wahl-block">
-                    <span class="wahl-titel">Bis wohin?</span>
+                    <span class="wahl-titel">Wie möchtest du üben?</span>
                     <div class="wahl-reihe">
-                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m5','raum',5)">bis 5</button>
-                        <button class="wahl-btn" onclick="setzeWahl(this,'m5','raum',10)">bis 10</button>
-                    </div>
-                </div>
-
-                <div class="wahl-block">
-                    <span class="wahl-titel">Wie viele Bilder auf einmal?</span>
-                    <div class="wahl-reihe">
-                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m5','gruppen',3)">3 Bilder</button>
-                        <button class="wahl-btn" onclick="setzeWahl(this,'m5','gruppen',4)">4 Bilder</button>
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m5','modus','eigen')">🌿 Eigenes Tempo</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m5','modus','zeit')">⚡ Auf Zeit</button>
                     </div>
                 </div>
 
@@ -355,8 +354,9 @@
     <div id="m5GameScreen" class="screen">
         <div class="header">
             <button class="back-btn" onclick="showScreen('m5SetupScreen')"><span class="arrow">←</span> Zurück</button>
-            <button class="tool-btn vorlese-toggle" onclick="toggleVorlesen()">🔊 Vorlesen an</button>
+            <button class="tool-btn vorlese-toggle" onclick="vorlesenAktuelleAufgabe()" aria-label="Aufgabe vorlesen" title="Aufgabe vorlesen">🔊</button>
             <div class="progress">⭐ <span id="m5Score">0</span> / <span id="m5Nummer">1</span></div>
+            <div class="progress" id="m5Zeit" hidden>⏱ Restzeit: <span id="m5ZeitWert">2:00</span></div>
         </div>
         <div class="content">
             <div class="task-area modul5-border">
