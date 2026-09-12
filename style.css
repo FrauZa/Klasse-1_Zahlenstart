@@ -215,12 +215,12 @@ body {
 /* Punkte-Streifen: zehn Plaetze nebeneinander, mit Luecke nach fuenf. */
 .zehnerfeld { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; }
 .zehner-streifen {
-    display: flex; align-items: center; gap: 6px; width: 100%; max-width: none;
-    padding: 10px; background: #fff; border-radius: 14px;
+    display: flex; align-items: center; gap: 8px; width: min(100%, 280px); max-width: none;
+    padding: 12px; background: #fff; border-radius: 16px;
     box-shadow: 0 4px 14px rgba(0,0,0,.1); border: 3px solid #cfd8dc;
 }
 .zehner-streifen-zelle {
-    flex: 1 1 0; aspect-ratio: 1; min-width: 0;
+    flex: 1 1 0; aspect-ratio: 1; min-width: 0; min-height: 20px;
     border: 2px solid #b0bec5; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
 }
@@ -228,9 +228,10 @@ body {
 .zehner-streifen-zelle.voll { background: #37474f; border-color: #37474f; }
 
 .punktebild {
-    background: #fff; border-radius: 16px; padding: 6px;
+    display: block; width: min(100%, 340px); height: auto;
+    background: #fff; border-radius: 16px; padding: 8px;
     box-shadow: 0 4px 14px rgba(0,0,0,.1);
-    max-width: 100%; height: auto;
+    max-width: 100%;
 }
 
 .zahl-optionen { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
@@ -354,18 +355,21 @@ body {
 }
 
 /* Modul 5: Bildgruppen */
-.bild-gruppen { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 8px; }
+.bild-gruppen { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 8px; }
 .bild-gruppe {
-    background: #fbfbfb; border-radius: 18px; padding: 12px;
-    border: 3px solid #eceff1; display: flex; flex-direction: column; align-items: center; gap: 8px;
+    background: #fbfbfb; border-radius: 20px; padding: 16px 10px 12px;
+    border: 3px solid #eceff1; display: flex; flex-direction: column; align-items: center; gap: 12px;
+    min-height: 100%;
 }
 .bild-menge {
-    display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; align-items: center;
-    min-height: 92px; font-size: clamp(1.4rem, 5vw, 2rem); line-height: 1.1;
+    display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center;
+    width: 100%; min-height: 150px; font-size: clamp(1.8rem, 5vw, 2.4rem); line-height: 1.1;
 }
+.bild-menge .zehnerfeld { width: min(100%, 250px); }
+.bild-menge .zehner-streifen { width: min(100%, 250px); padding: 14px; }
 .bild-menge span { width: 1.5em; text-align: center; }
-.bild-gruppe .karten-slot { width: 78px; height: 98px; }
-.bild-gruppe .zahl-karte { width: 70px; height: 90px; font-size: 2.1rem; }
+.bild-gruppe .karten-slot { width: 100%; max-width: 110px; height: 118px; }
+.bild-gruppe .zahl-karte { width: 100%; max-width: 96px; height: 110px; font-size: clamp(2rem, 5vw, 2.7rem); }
 
 /* Konfetti */
 .konfetti {
