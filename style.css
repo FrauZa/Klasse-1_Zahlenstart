@@ -1,0 +1,381 @@
+/* ============================================
+   Zahlen-Start - Mathe Klasse 1, Anfangsunterricht
+
+   Eine Farbe je Modul. Alles andere zieht sie ueber die
+   Klassen .modulN / .modulN-color / .modulN-border / .modulN-btn.
+   ============================================ */
+:root {
+    --color-modul1: #66BB6A;  --color-modul1-light: #A5D6A7;   /* gruen   - Mengen erfassen */
+    --color-modul2: #42A5F5;  --color-modul2-light: #90CAF9;   /* blau    - Ziffern schreiben */
+    --color-modul3: #FB8C00;  --color-modul3-light: #FFCC80;   /* orange  - dazu/weg */
+    --color-modul4: #9C27B0;  --color-modul4-light: #E1BEE7;   /* lila    - ordnen */
+    --color-modul5: #00897B;  --color-modul5-light: #80CBC4;   /* tuerkis - Bild und Zahl */
+
+    --color-akzent: #f57c00;
+    --color-text: #333;
+    --color-bg: #f5f5f5;
+    --color-white: #ffffff;
+    --shadow: 0 4px 12px rgba(0, 0, 0, .15);
+    --shadow-hover: 0 6px 20px rgba(0, 0, 0, .2);
+}
+
+/* ============================================
+   Basis
+   ============================================ */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Outfit', 'Comic Sans MS', cursive, sans-serif;
+    color: var(--color-text);
+    background: var(--color-bg);
+    overflow-x: hidden;
+}
+
+.background-placeholder {
+    position: fixed; inset: 0;
+    background-image: url('background.jpg');
+    background-size: cover; background-position: center;
+    opacity: .85; z-index: -1;
+}
+
+/* Screen-Verwaltung: sichtbar ist nur .active */
+.screen { display: none; min-height: 100vh; padding: 20px; }
+.screen.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+.content { position: relative; z-index: 1; max-width: 900px; width: 100%; }
+
+.header {
+    display: flex; justify-content: space-between; align-items: center;
+    width: 100%; max-width: 900px; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
+}
+
+.main-title {
+    font-size: 3rem; font-weight: 700; color: var(--color-white);
+    text-align: center; margin-bottom: 25px;
+    text-shadow: 2px 2px 8px rgba(0, 0, 0, .3);
+}
+
+.module-intro { text-align: center; color: #fff; margin-bottom: 22px; text-shadow: 0 2px 6px rgba(0,0,0,.35); }
+.module-kicker { display: inline-block; font-size: .8rem; letter-spacing: .12em; text-transform: uppercase; opacity: .85; }
+
+/* ============================================
+   Kacheln und Gruppen
+   ============================================ */
+.module-group { margin-bottom: 26px; }
+.module-group-heading {
+    display: flex; align-items: center; gap: 14px; margin: 0 20px 4px;
+    color: #fff; text-shadow: 0 2px 5px rgba(0,0,0,.35);
+}
+.module-group-heading .group-icon { font-size: 1.8rem; }
+.module-group-heading h2 { font-size: 1.45rem; }
+.module-group-heading p { color: rgba(255,255,255,.9); margin-top: 3px; }
+
+.button-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; padding: 18px; }
+
+.operation-btn {
+    min-height: 150px; border: none; border-radius: 20px;
+    font-family: inherit; font-size: 1.3rem; font-weight: 600;
+    color: #fff; cursor: pointer; padding: 18px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: var(--shadow); transition: transform .15s, box-shadow .15s;
+}
+.operation-btn:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+.operation-btn .emoji { font-size: 2.6rem; }
+.card-hint { font-size: .8rem; font-weight: 400; opacity: .92; }
+
+/* Modulfarben */
+.modul1 { background: linear-gradient(135deg, #66BB6A, #A5D6A7); }
+.modul2 { background: linear-gradient(135deg, #42A5F5, #90CAF9); }
+.modul3 { background: linear-gradient(135deg, #FB8C00, #FFCC80); }
+.modul4 { background: linear-gradient(135deg, #9C27B0, #CE93D8); }
+.modul5 { background: linear-gradient(135deg, #00897B, #80CBC4); }
+
+.modul1-color { color: var(--color-modul1); }
+.modul2-color { color: var(--color-modul2); }
+.modul3-color { color: var(--color-modul3); }
+.modul4-color { color: var(--color-modul4); }
+.modul5-color { color: var(--color-modul5); }
+
+.modul1-border { border: 3px solid var(--color-modul1); }
+.modul2-border { border: 3px solid var(--color-modul2); }
+.modul3-border { border: 3px solid var(--color-modul3); }
+.modul4-border { border: 3px solid var(--color-modul4); }
+.modul5-border { border: 3px solid var(--color-modul5); }
+
+.modul1-btn { background: var(--color-modul1); color: #fff; }
+.modul2-btn { background: var(--color-modul2); color: #fff; }
+.modul3-btn { background: var(--color-modul3); color: #fff; }
+.modul4-btn { background: var(--color-modul4); color: #fff; }
+.modul5-btn { background: var(--color-modul5); color: #fff; }
+.modul3-bg { background: var(--color-modul3); color: #fff; }
+
+/* ============================================
+   Allgemeine Bausteine
+   ============================================ */
+.mode-selection-container { background: rgba(255,255,255,.96); border-radius: 22px; padding: 28px; box-shadow: var(--shadow); }
+.exercise-title { font-size: 2rem; text-align: center; margin-bottom: 8px; }
+.description { text-align: center; color: #666; margin-bottom: 18px; }
+
+.task-area {
+    background: rgba(255,255,255,.96); border-radius: 22px;
+    padding: 22px; box-shadow: var(--shadow); text-align: center;
+}
+
+.button-area { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+
+.check-btn, .next-btn {
+    font-family: inherit; font-size: 1.2rem; font-weight: 600;
+    padding: 14px 28px; border: none; border-radius: 14px;
+    background: var(--color-white); cursor: pointer; box-shadow: var(--shadow);
+}
+.check-btn:hover, .next-btn:hover { box-shadow: var(--shadow-hover); }
+
+.back-btn {
+    font-family: inherit; font-size: 1rem; font-weight: 600;
+    padding: 10px 18px; border: none; border-radius: 12px;
+    background: rgba(255,255,255,.92); cursor: pointer; box-shadow: var(--shadow);
+}
+.back-btn .arrow { margin-right: 6px; }
+
+.tool-btn {
+    font-family: inherit; font-size: 1rem; padding: 10px 18px;
+    border: none; border-radius: 12px; background: rgba(255,255,255,.92);
+    cursor: pointer; box-shadow: var(--shadow);
+}
+
+.progress {
+    background: rgba(255,255,255,.92); border-radius: 12px;
+    padding: 9px 16px; font-weight: 700; box-shadow: var(--shadow);
+}
+
+.hinweis { color: #777; font-size: .95rem; margin-top: 14px; }
+
+.feedback-text { min-height: 34px; margin-top: 14px; font-size: 1.3rem; font-weight: 700; }
+.feedback-text.richtig { color: #2e7d32; }
+.feedback-text.falsch { color: #c62828; }
+
+/* Einstellungen: Wahlknoepfe */
+.wahl-block { margin-bottom: 18px; }
+.wahl-titel { display: block; font-weight: 600; color: #555; margin-bottom: 8px; }
+.wahl-reihe { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.wahl-btn {
+    font-family: inherit; font-size: 1.05rem; font-weight: 600;
+    padding: 12px 20px; border: 3px solid #e4e4e4; border-radius: 14px;
+    background: #fff; cursor: pointer; color: #555;
+}
+.wahl-btn:hover { border-color: #bdbdbd; }
+.wahl-btn.aktiv { border-color: var(--color-akzent); background: #fff3e0; color: #e65100; }
+
+/* Ergebnis */
+.result-card { background: rgba(255,255,255,.96); border-radius: 22px; padding: 30px; box-shadow: var(--shadow); }
+.result-line { font-size: 1.4rem; margin: 10px 0; }
+.result-line strong { font-size: 2.4rem; color: var(--color-akzent); }
+.stars { font-size: 2.8rem; color: gold; margin-top: 12px; letter-spacing: 4px; }
+.result-lob { margin-top: 12px; font-size: 1.15rem; color: #555; }
+
+/* ============================================
+   Modul 1: Mengenbilder (Wuerfel, Finger, Zehnerfeld, Punkte)
+   ============================================ */
+.mengen-buehne {
+    min-height: 230px; display: flex; align-items: center; justify-content: center;
+    gap: 20px; flex-wrap: wrap; padding: 12px;
+    background: #fbfbfb; border-radius: 18px;
+}
+.mengen-buehne.verdeckt { background: repeating-linear-gradient(45deg, #eceff1, #eceff1 12px, #e0e0e0 12px, #e0e0e0 24px); }
+.verdeckt-hinweis { font-size: 3.6rem; }
+
+.dice-container { display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; }
+.dice {
+    width: 104px; height: 104px; background: var(--color-white);
+    border-radius: 15px; padding: 10px;
+    box-shadow: inset 0 0 10px rgba(0,0,0,.1), 0 5px 15px rgba(0,0,0,.2);
+    display: flex; align-items: center; justify-content: center;
+}
+
+.hands-container { display: flex; justify-content: center; align-items: flex-end; gap: 22px; flex-wrap: wrap; }
+.hand-card {
+    background: rgba(255,255,255,.92); border-radius: 20px; padding: 10px 14px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.08); border: 3px solid #eef2f7;
+    display: flex; flex-direction: column; align-items: center;
+}
+.hand-svg { width: 128px; height: 184px; display: block; }
+.hand-label { margin-top: 4px; font-size: .85rem; font-weight: 700; color: #576574; }
+
+/* Zehnerfeld: fuenf Spalten, damit die Kraft der Fuenf sichtbar bleibt */
+.zehnerfeld { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+.zehnerfeld-block {
+    display: grid; grid-template-columns: repeat(5, 40px); grid-auto-rows: 40px;
+    gap: 4px; background: #fff; padding: 8px; border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.1); border: 3px solid #cfd8dc;
+}
+.zehnerfeld-zelle { border: 2px solid #cfd8dc; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.zehnerfeld-zelle.voll::after { content: ''; width: 24px; height: 24px; border-radius: 50%; background: #37474f; }
+
+.punktebild {
+    background: #fff; border-radius: 16px; padding: 6px;
+    box-shadow: 0 4px 14px rgba(0,0,0,.1);
+    max-width: 100%; height: auto;
+}
+
+.zahl-optionen { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+.zahl-option {
+    font-family: inherit; font-size: 2.2rem; font-weight: 700;
+    min-width: 86px; padding: 12px 18px; border: 4px solid #e4e4e4;
+    border-radius: 18px; background: #fff; cursor: pointer; color: #37474f;
+}
+.zahl-option:hover:enabled { border-color: var(--color-akzent); transform: translateY(-2px); }
+.zahl-option:disabled { cursor: default; }
+.zahl-option.richtig { border-color: #2e7d32; background: #c8e6c9; }
+.zahl-option.falsch { border-color: #c62828; background: #ffcdd2; }
+
+/* ============================================
+   Modul 2: Ziffern schreiben
+   ============================================ */
+.ziffern-wahl { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 8px; }
+.ziffer-kachel {
+    font-family: inherit; font-size: 2.4rem; font-weight: 700;
+    padding: 14px 0; border: none; border-radius: 16px;
+    background: var(--color-modul2-light); color: #0d47a1;
+    cursor: pointer; box-shadow: var(--shadow);
+}
+.ziffer-kachel:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+
+.ziffer-buehne { display: flex; justify-content: center; margin-top: 10px; }
+.ziffer-svg {
+    width: min(300px, 78vw); height: auto; aspect-ratio: 124 / 156;
+    background: #fff; border-radius: 20px;
+    box-shadow: inset 0 0 0 3px #e3f2fd, 0 4px 14px rgba(0,0,0,.1);
+    touch-action: none;   /* sonst scrollt das Tablet statt zu schreiben */
+    cursor: crosshair;
+}
+.ziffer-hilfslinie { stroke: #e0e0e0; stroke-width: 1.2; stroke-dasharray: 5 5; }
+.ziffer-bahn { fill: none; stroke: #dfe6ec; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
+.ziffer-bahn.blass { stroke: #f2f5f8; }
+.ziffer-spur { fill: none; stroke: var(--color-modul2); stroke-width: 11; stroke-linecap: round; stroke-linejoin: round; opacity: .92; }
+.ziffer-punkt { fill: #b0bec5; }
+.ziffer-punkt.erledigt { fill: #66BB6A; }
+.ziffer-punkt.ziel { fill: var(--color-akzent); }
+.ziffer-start { fill: #43a047; }
+.ziffer-startzahl { fill: #fff; font-size: 11px; font-weight: 700; text-anchor: middle; dominant-baseline: central; font-family: 'Outfit', sans-serif; }
+.ziffer-demo { fill: var(--color-akzent); }
+
+/* ============================================
+   Modul 3: Dazulegen oder wegstreichen
+   ============================================ */
+.zielzahl-zeile { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 6px 0 16px; flex-wrap: wrap; }
+.zielzahl-label { color: #666; font-size: 1.05rem; }
+.zielzahl {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 76px; height: 76px; border-radius: 20px;
+    font-size: 3rem; font-weight: 700; box-shadow: var(--shadow);
+}
+
+.objekt-feld {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+    max-width: 460px; margin: 0 auto; padding: 12px;
+    background: #fbfbfb; border-radius: 18px;
+}
+.objekt-platz {
+    aspect-ratio: 1; border: 3px dashed #dcdcdc; border-radius: 14px;
+    background: #fff; font-size: clamp(1.6rem, 6vw, 2.4rem);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative; user-select: none;
+    transition: transform .12s, border-color .12s;
+}
+.objekt-platz:hover { border-color: var(--color-modul3); }
+.objekt-platz.voll { border-style: solid; border-color: #ffe0b2; background: #fffaf3; }
+.objekt-platz.neu { animation: platz-pop .25s ease; }
+.objekt-platz.gestrichen { opacity: .45; }
+.objekt-platz.gestrichen::after {
+    content: ''; position: absolute; inset: 12% 6%;
+    background: linear-gradient(to bottom right, transparent 45%, #e53935 45%, #e53935 55%, transparent 55%);
+}
+@keyframes platz-pop { from { transform: scale(.5); } to { transform: scale(1); } }
+
+/* ============================================
+   Module 4 und 5: Karten legen (tippen oder ziehen)
+   ============================================ */
+.leine-wrap { position: relative; padding: 18px 0 10px; }
+.leine-schnur { position: absolute; left: 4%; right: 4%; top: 16px; height: 4px; background: #cfd8dc; border-radius: 2px; }
+
+.karten-slots { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; position: relative; }
+.karten-slot {
+    width: 92px; height: 116px; border: 4px dashed #cfd8dc; border-radius: 16px;
+    background: #fafafa; display: flex; align-items: center; justify-content: center;
+    position: relative; transition: border-color .15s, background .15s;
+}
+.karten-slot.bereit { border-color: var(--color-akzent); background: #fff3e0; }
+.karten-slot .slot-nummer {
+    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    background: #eceff1; border-radius: 10px; padding: 1px 9px;
+    font-size: .8rem; font-weight: 700; color: #607d8b;
+}
+.karten-slot.richtig { border-color: #2e7d32; background: #e8f5e9; border-style: solid; }
+.karten-slot.falsch { border-color: #c62828; background: #ffebee; border-style: solid; }
+
+.karten-tisch {
+    display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;
+    min-height: 128px; padding: 10px; margin-top: 8px;
+    background: #f7f7f7; border-radius: 18px;
+}
+
+.zahl-karte {
+    width: 84px; height: 108px; border-radius: 14px; border: none;
+    background: #fff; box-shadow: 0 4px 12px rgba(0,0,0,.18);
+    display: flex; align-items: center; justify-content: center;
+    font-family: inherit; font-size: 2.6rem; font-weight: 700; color: #37474f;
+    cursor: grab; touch-action: none; user-select: none;
+}
+.zahl-karte:hover { transform: translateY(-3px); }
+.zahl-karte.gewaehlt { outline: 5px solid var(--color-akzent); transform: translateY(-6px); }
+.zahl-karte.wird-gezogen { opacity: .3; }
+.zahl-karte svg { width: 70px; height: 70px; }
+
+.karte-geist {
+    position: fixed; z-index: 100; pointer-events: none;
+    transform: translate(-50%, -50%) rotate(-4deg) scale(1.06);
+    box-shadow: 0 10px 24px rgba(0,0,0,.3);
+}
+
+/* Modul 5: Bildgruppen */
+.bild-gruppen { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 8px; }
+.bild-gruppe {
+    background: #fbfbfb; border-radius: 18px; padding: 12px;
+    border: 3px solid #eceff1; display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.bild-menge {
+    display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; align-items: center;
+    min-height: 92px; font-size: clamp(1.4rem, 5vw, 2rem); line-height: 1.1;
+}
+.bild-menge span { width: 1.5em; text-align: center; }
+.bild-gruppe .karten-slot { width: 78px; height: 98px; }
+.bild-gruppe .zahl-karte { width: 70px; height: 90px; font-size: 2.1rem; }
+
+/* Konfetti */
+.konfetti {
+    position: fixed; top: -12px; width: 10px; height: 16px; z-index: 200;
+    border-radius: 2px; pointer-events: none;
+    animation: konfetti-fall 2.4s linear forwards;
+}
+@keyframes konfetti-fall {
+    to { transform: translateY(105vh) rotate(540deg); opacity: .2; }
+}
+
+/* ============================================
+   Kleine Bildschirme
+   ============================================ */
+@media (max-width: 768px) {
+    .main-title { font-size: 2.2rem; }
+    .button-grid { grid-template-columns: 1fr; }
+    .zahl-option { font-size: 1.8rem; min-width: 70px; }
+    .karten-slot { width: 76px; height: 96px; }
+    .zahl-karte { width: 70px; height: 90px; font-size: 2.1rem; }
+    .hand-svg { width: 104px; height: 150px; }
+    .dice { width: 84px; height: 84px; }
+    .zehnerfeld-block { grid-template-columns: repeat(5, 32px); grid-auto-rows: 32px; }
+    .zehnerfeld-zelle.voll::after { width: 18px; height: 18px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+}

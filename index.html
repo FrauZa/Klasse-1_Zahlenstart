@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zahlen-Start – Mathe Klasse 1</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Globaler Hintergrund -->
+    <div class="background-placeholder"></div>
+
+    <!-- ============================================
+         Startbildschirm
+         ============================================ -->
+    <div id="startScreen" class="screen active">
+        <div class="content">
+            <h1 class="main-title">Zahlen-Start</h1>
+            <div class="module-intro">
+                <span class="module-kicker">Mathe Klasse 1</span>
+                <p>Zahlen sehen, schreiben und ordnen. Tippe auf ein Bild.</p>
+            </div>
+
+            <section class="module-group">
+                <div class="module-group-heading">
+                    <span class="group-icon">👀</span>
+                    <div><h2>Mengen und Zahlen</h2><p>Wie viele sind es?</p></div>
+                </div>
+                <div class="button-grid">
+                    <button class="operation-btn modul1" onclick="showScreen('m1SetupScreen')">
+                        <span class="emoji">🎲</span>
+                        <span class="text">Mengen erfassen</span>
+                        <span class="card-hint">Sehen und die Zahl finden</span>
+                    </button>
+                    <button class="operation-btn modul5" onclick="showScreen('m5SetupScreen')">
+                        <span class="emoji">🐶 3️⃣</span>
+                        <span class="text">Bilder und Zahlen</span>
+                        <span class="card-hint">Die passende Zahl zuordnen</span>
+                    </button>
+                    <button class="operation-btn modul3" onclick="showScreen('m3SetupScreen')">
+                        <span class="emoji">➕ ❌</span>
+                        <span class="text">Dazulegen oder wegstreichen</span>
+                        <span class="card-hint">So viele wie die Zahl sagt</span>
+                    </button>
+                </div>
+            </section>
+
+            <section class="module-group">
+                <div class="module-group-heading">
+                    <span class="group-icon">✏️</span>
+                    <div><h2>Ziffern und Reihenfolge</h2><p>Schreiben und sortieren.</p></div>
+                </div>
+                <div class="button-grid">
+                    <button class="operation-btn modul2" onclick="showScreen('m2SelectScreen')">
+                        <span class="emoji">✏️</span>
+                        <span class="text">Ziffern schreiben</span>
+                        <span class="card-hint">Mit dem Finger nachspuren</span>
+                    </button>
+                    <button class="operation-btn modul4" onclick="showScreen('m4SetupScreen')">
+                        <span class="emoji">📶</span>
+                        <span class="text">Zahlen ordnen</span>
+                        <span class="card-hint">Von klein nach groß</span>
+                    </button>
+                </div>
+            </section>
+        </div>
+    </div>
+
+
+    <!-- ============================================
+         Modul 1: Mengen erfassen - Einstellungen
+         ============================================ -->
+    <div id="m1SetupScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('startScreen')"><span class="arrow">←</span> Zurück</button>
+        </div>
+        <div class="content">
+            <div class="mode-selection-container modul1-border">
+                <h2 class="exercise-title modul1-color">Mengen erfassen</h2>
+                <p class="description">Du siehst ein Bild. Wie viele sind es?</p>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">Bis wohin?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m1','raum',5)">bis 5</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m1','raum',10)">bis 10</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m1','raum',20)">bis 20</button>
+                    </div>
+                </div>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">Wie lange siehst du das Bild?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m1','modus','zeit')">🌿 So lange du willst</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m1','modus','blitz')">⚡ Blitzblick</button>
+                    </div>
+                </div>
+
+                <div class="button-area">
+                    <button class="check-btn modul1-btn" onclick="m1Start()">Los geht es!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modul 1: Übung -->
+    <div id="m1GameScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('m1SetupScreen')"><span class="arrow">←</span> Zurück</button>
+            <button class="tool-btn vorlese-toggle" onclick="toggleVorlesen()">🔊 Vorlesen an</button>
+            <div class="progress">⭐ <span id="m1Score">0</span> / <span id="m1Nummer">1</span></div>
+        </div>
+        <div class="content">
+            <div class="task-area modul1-border">
+                <h2 class="exercise-title modul1-color" id="m1Prompt">Wie viele sind es?</h2>
+                <div id="m1Buehne" class="mengen-buehne"></div>
+                <div class="button-area" id="m1BlitzArea" hidden>
+                    <button class="tool-btn" onclick="m1NochmalBlitzen()">👀 Noch einmal zeigen</button>
+                </div>
+                <div id="m1Optionen" class="zahl-optionen"></div>
+                <p id="m1Feedback" class="feedback-text"></p>
+                <button class="next-btn modul1-btn" id="m1Next" onclick="m1Weiter()" hidden>Weiter →</button>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ============================================
+         Modul 2: Ziffern schreiben - Ziffernwahl
+         ============================================ -->
+    <div id="m2SelectScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('startScreen')"><span class="arrow">←</span> Zurück</button>
+        </div>
+        <div class="content">
+            <div class="mode-selection-container modul2-border">
+                <h2 class="exercise-title modul2-color">Ziffern schreiben</h2>
+                <p class="description">Welche Ziffer möchtest du üben?</p>
+                <div class="ziffern-wahl" id="m2ZiffernGitter"></div>
+                <div class="button-area">
+                    <button class="check-btn modul2-btn" onclick="m2Start('alle')">🔟 Alle der Reihe nach</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modul 2: Übung -->
+    <div id="m2GameScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('m2SelectScreen')"><span class="arrow">←</span> Zurück</button>
+            <button class="tool-btn vorlese-toggle" onclick="toggleVorlesen()">🔊 Vorlesen an</button>
+            <div class="progress" id="m2Fortschritt">Ziffer 1</div>
+        </div>
+        <div class="content">
+            <div class="task-area modul2-border">
+                <h2 class="exercise-title modul2-color" id="m2Prompt">Schreibe die 1</h2>
+                <p class="description" id="m2Spruch"></p>
+                <div class="ziffer-buehne">
+                    <svg id="m2Svg" class="ziffer-svg" viewBox="-12 -8 124 156" aria-label="Schreibfeld"></svg>
+                </div>
+                <p id="m2Feedback" class="feedback-text"></p>
+                <div class="button-area">
+                    <button class="tool-btn" onclick="m2Vormachen()">👁️ Zeig mir wie</button>
+                    <button class="tool-btn" onclick="m2Neu()">↺ Nochmal</button>
+                    <button class="next-btn modul2-btn" id="m2Next" onclick="m2Weiter()" hidden>Weiter →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ============================================
+         Modul 3: Ergänzen oder durchstreichen
+         ============================================ -->
+    <div id="m3SetupScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('startScreen')"><span class="arrow">←</span> Zurück</button>
+        </div>
+        <div class="content">
+            <div class="mode-selection-container modul3-border">
+                <h2 class="exercise-title modul3-color">Dazulegen oder wegstreichen</h2>
+                <p class="description">Es sollen genau so viele sein, wie die Zahl sagt.</p>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">Bis wohin?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m3','raum',5)">bis 5</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m3','raum',10)">bis 10</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m3','raum',20)">bis 20</button>
+                    </div>
+                </div>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">Was möchtest du üben?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m3','art','dazu')">➕ Dazulegen</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m3','art','weg')">❌ Wegstreichen</button>
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m3','art','gemischt')">🔀 Gemischt</button>
+                    </div>
+                </div>
+
+                <div class="button-area">
+                    <button class="check-btn modul3-btn" onclick="m3Start()">Los geht es!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modul 3: Übung -->
+    <div id="m3GameScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('m3SetupScreen')"><span class="arrow">←</span> Zurück</button>
+            <button class="tool-btn vorlese-toggle" onclick="toggleVorlesen()">🔊 Vorlesen an</button>
+            <div class="progress">⭐ <span id="m3Score">0</span> / <span id="m3Nummer">1</span></div>
+        </div>
+        <div class="content">
+            <div class="task-area modul3-border">
+                <h2 class="exercise-title modul3-color" id="m3Prompt">Es sollen 5 sein.</h2>
+                <div class="zielzahl-zeile">
+                    <span class="zielzahl-label">So viele sollen es sein:</span>
+                    <span class="zielzahl modul3-bg" id="m3Zahl">5</span>
+                </div>
+                <div id="m3Feld" class="objekt-feld"></div>
+                <p class="hinweis" id="m3Hinweis">Leeres Feld antippen legt etwas dazu. Bild antippen streicht es durch.</p>
+                <p id="m3Feedback" class="feedback-text"></p>
+                <div class="button-area">
+                    <button class="check-btn modul3-btn" id="m3Check" onclick="m3Pruefen()">Fertig!</button>
+                    <button class="next-btn modul3-btn" id="m3Next" onclick="m3Weiter()" hidden>Weiter →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ============================================
+         Modul 4: Zahlen ordnen
+         ============================================ -->
+    <div id="m4SetupScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('startScreen')"><span class="arrow">←</span> Zurück</button>
+        </div>
+        <div class="content">
+            <div class="mode-selection-container modul4-border">
+                <h2 class="exercise-title modul4-color">Zahlen ordnen</h2>
+                <p class="description">Lege die Karten in die richtige Reihenfolge.</p>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">Bis wohin?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m4','raum',10)">bis 10</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m4','raum',20)">bis 20</button>
+                    </div>
+                </div>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">Wie viele Karten?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m4','anzahl',3)">3</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m4','anzahl',4)">4</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m4','anzahl',5)">5</button>
+                    </div>
+                </div>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">Was steht auf den Karten?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m4','karten','zahlen')">3️⃣ Zahlen</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m4','karten','punkte')">⚫ Punkte</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m4','karten','gemischt')">🔀 Gemischt</button>
+                    </div>
+                </div>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">In welche Richtung?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m4','richtung','auf')">▶ Klein nach groß</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m4','richtung','ab')">◀ Groß nach klein</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m4','richtung','gemischt')">🔀 Gemischt</button>
+                    </div>
+                </div>
+
+                <div class="button-area">
+                    <button class="check-btn modul4-btn" onclick="m4Start()">Los geht es!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modul 4: Übung -->
+    <div id="m4GameScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('m4SetupScreen')"><span class="arrow">←</span> Zurück</button>
+            <button class="tool-btn vorlese-toggle" onclick="toggleVorlesen()">🔊 Vorlesen an</button>
+            <div class="progress">⭐ <span id="m4Score">0</span> / <span id="m4Nummer">1</span></div>
+        </div>
+        <div class="content">
+            <div class="task-area modul4-border">
+                <h2 class="exercise-title modul4-color" id="m4Prompt">Ordne von klein nach groß.</h2>
+                <div class="leine-wrap">
+                    <div class="leine-schnur"></div>
+                    <div id="m4Leine" class="karten-slots"></div>
+                </div>
+                <p class="hinweis">Karte antippen und dann einen Platz antippen – oder die Karte hinüberziehen.</p>
+                <div id="m4Tisch" class="karten-tisch"></div>
+                <p id="m4Feedback" class="feedback-text"></p>
+                <div class="button-area">
+                    <button class="check-btn modul4-btn" id="m4Check" onclick="m4Pruefen()">Fertig!</button>
+                    <button class="next-btn modul4-btn" id="m4Next" onclick="m4Weiter()" hidden>Weiter →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ============================================
+         Modul 5: Bilder und Zahlen zuordnen
+         ============================================ -->
+    <div id="m5SetupScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('startScreen')"><span class="arrow">←</span> Zurück</button>
+        </div>
+        <div class="content">
+            <div class="mode-selection-container modul5-border">
+                <h2 class="exercise-title modul5-color">Bilder und Zahlen</h2>
+                <p class="description">Welche Zahl passt zu welchem Bild?</p>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">Bis wohin?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m5','raum',5)">bis 5</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m5','raum',10)">bis 10</button>
+                    </div>
+                </div>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">Wie viele Bilder auf einmal?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m5','gruppen',3)">3 Bilder</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m5','gruppen',4)">4 Bilder</button>
+                    </div>
+                </div>
+
+                <div class="button-area">
+                    <button class="check-btn modul5-btn" onclick="m5Start()">Los geht es!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modul 5: Übung -->
+    <div id="m5GameScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('m5SetupScreen')"><span class="arrow">←</span> Zurück</button>
+            <button class="tool-btn vorlese-toggle" onclick="toggleVorlesen()">🔊 Vorlesen an</button>
+            <div class="progress">⭐ <span id="m5Score">0</span> / <span id="m5Nummer">1</span></div>
+        </div>
+        <div class="content">
+            <div class="task-area modul5-border">
+                <h2 class="exercise-title modul5-color" id="m5Prompt">Lege zu jedem Bild die passende Zahl.</h2>
+                <div id="m5Gruppen" class="bild-gruppen"></div>
+                <p class="hinweis">Zahlenkarte antippen und dann das Bild antippen – oder die Karte hinüberziehen.</p>
+                <div id="m5Tisch" class="karten-tisch"></div>
+                <p id="m5Feedback" class="feedback-text"></p>
+                <div class="button-area">
+                    <button class="check-btn modul5-btn" id="m5Check" onclick="m5Pruefen()">Fertig!</button>
+                    <button class="next-btn modul5-btn" id="m5Next" onclick="m5Weiter()" hidden>Weiter →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ============================================
+         Gemeinsamer Ergebnis-Bildschirm
+         ============================================ -->
+    <div id="resultScreen" class="screen">
+        <div class="content" style="text-align:center;">
+            <div class="result-card">
+                <h2 class="exercise-title" id="resultTitel">Geschafft!</h2>
+                <p class="result-line">Du hast <strong id="resultRichtig">0</strong> von <strong id="resultGesamt">0</strong> geschafft.</p>
+                <div class="stars" id="resultSterne">☆☆☆☆☆</div>
+                <p class="result-lob" id="resultLob"></p>
+            </div>
+            <div class="button-area">
+                <button class="check-btn" id="resultNochmalBtn" onclick="resultNochmal()">🔄 Noch einmal</button>
+                <button class="back-btn" onclick="showScreen('startScreen')">🏠 Zur Übersicht</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
