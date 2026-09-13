@@ -614,8 +614,18 @@ const ZIFFERN = {
         striche: [kette(linie([18, 20], [84, 20], 12), linie([84, 20], [40, 126], 18)), linie([28, 78], [76, 78], 12)]
     },
     8: {
-        spruch: 'Oben herum, durch die Mitte, unten herum, kreuzen und oben schließen: die Acht.',
-        striche: [kette(bogen(50, 46, 25, 25, -51, -270, 18), bogen(50, 99, 28, 28, -90, -450, 30), bogen(50, 46, 25, 25, -270, -411, 18))]
+        spruch: 'Oben rechts anfangen, nach links herum, schräg nach unten rechts, unten herum und schräg zurück nach oben: die Acht.',
+        /* Ein Zug: oberer Kreis links herum, schraeg hinunter nach rechts,
+           unterer Kreis rechts herum und schraeg zurueck nach oben. Die
+           beiden Schraegen sind die inneren Tangenten der zwei Kreise -
+           deshalb hat der Weg keine Knicke und kreuzt sich in der Taille. */
+        striche: [kette(
+            bogen(50, 33, 19, 19, -60, -220.3, 20),
+            linie([35.5, 45.3], [69.1, 84.8], 10),
+            bogen(50, 101, 25, 25, -40.3, 220.3, 32),
+            linie([30.9, 84.8], [64.5, 45.3], 10),
+            bogen(50, 33, 19, 19, 40.3, -60, 12)
+        )]
     },
     9: {
         spruch: 'Erst den Kreis ganz schließen, dann nach unten: die Neun.',
@@ -729,12 +739,6 @@ function m2Laden() {
         const anzahl = Math.max(4, Math.min(10, Math.round(strichLaenge(s) / 22)));
         return gleichmaessigePunkte(s, anzahl);
     });
-    if (m2.ziffer === 8 && m2.punkte[0].length === 10) {
-        /* Die Bahn bleibt glatt; nur die Kontrollpunkte folgen der
-           kindgerechten Schreibfolge der Acht. */
-        const reihenfolge = [0, 1, 2, 7, 6, 5, 4, 3, 8, 9];
-        m2.punkte = [reihenfolge.map(i => m2.punkte[0][i])];
-    }
 
     document.getElementById('m2Prompt').textContent = 'Schreibe die ' + m2.ziffer;
     document.getElementById('m2Spruch').textContent = daten.spruch;
@@ -1013,7 +1017,7 @@ function m2Vormachen() {
         punkt.setAttribute('cx', p.x.toFixed(1));
         punkt.setAttribute('cy', p.y.toFixed(1));
         (spuren[p.si] = spuren[p.si] || []).push(p);
-        const pfad = document.getElementById('m2Spur' + p.si);
+        const pfad = document.getElementById('m2Spur' + m2.feld + '_' + p.si);
         if (pfad) pfad.setAttribute('d', pfadAusSpur(spuren[p.si]));
     }, 45);
 }
