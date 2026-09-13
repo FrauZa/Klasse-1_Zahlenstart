@@ -630,11 +630,11 @@ const M2_BAHN_TOLERANZ = 24;    // ausserhalb dieser Entfernung ist es kein Nach
 const m2 = {
     liste: [1], index: 0, ziffer: 1,
     alleAusgewaehlt: false,
-    durchgang: 1, durchgaenge: 3, ohneHilfe: false,
+    durchgang: 1, durchgaenge: 1, feld: 0, ohneHilfe: false,
     strich: 0, ziel: 0, zeichnend: false, endpunktErreicht: false,
     spur: [], spurLaenge: 0, spurZuWeit: false,
     punkte: [], fertig: false, demo: null,
-    geschafft: 0, versuche: 0
+    geschafft: 0, versuche: 0, gespeicherteSpuren: []
 };
 
 function abstand(a, b) {
@@ -707,16 +707,19 @@ function m2Start(was) {
     m2.liste = was === 'alle'
         ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
         : [was];
-    m2.durchgaenge = 6;
+    m2.durchgaenge = 1;
     m2.index = 0;
     m2.durchgang = 1;
     m2.geschafft = 0;
+    m2.gespeicherteSpuren = [];
     showScreen('m2GameScreen');
     m2Laden();
 }
 
 function m2Laden() {
     m2.ziffer = m2.liste[m2.index];
+    m2.feld = 0;
+    m2.gespeicherteSpuren = Array.from({ length: 10 }, () => []);
     /* Der letzte Durchgang laeuft ohne graue Bahn - dann schreibt das
        Kind die Ziffer aus dem Gedaechtnis. */
     m2.ohneHilfe = m2.durchgaenge > 1 && m2.durchgang === m2.durchgaenge;
@@ -745,9 +748,9 @@ function m2FortschrittAnzeigen(erledigt = m2.durchgang - 1) {
     const zifferText = document.getElementById('m2ZifferFortschritt');
     const sterne = [...document.querySelectorAll('#m2Fortschritt .m2-stern')];
     if (!zifferText || !sterne.length) return;
-    zifferText.textContent = m2.liste.length > 1
+    zifferText.textContent = (m2.liste.length > 1
         ? 'Ziffer ' + (m2.index + 1) + ' von ' + m2.liste.length
-        : 'Ziffer ' + m2.ziffer;
+        : 'Ziffer ' + m2.ziffer) + ' · Feld ' + Math.min(m2.feld + 1, 10) + ' von 10';
     sterne.forEach((stern, i) => {
         const gefuellt = i < erledigt;
         stern.textContent = gefuellt ? '★' : '☆';
@@ -766,50 +769,60 @@ function m2Neu() {
     m2.zeichnend = false;
     m2.fertig = false;
     m2.versuche = 0;
+    m2.gespeicherteSpuren[m2.feld] = [];
     document.getElementById('m2Next').hidden = true;
     setzeFeedback('m2Feedback', '');
     m2Zeichnen();
 }
 
 function m2Zeichnen() {
-    const svg = document.getElementById('m2Svg');
     const daten = ZIFFERN[m2.ziffer];
-    let html = '';
+    const blatt = document.getElementById('m2Blatt');
+    let felder = '';
 
-    html += '<line class="ziffer-hilfslinie" x1="-8" y1="14" x2="108" y2="14"/>';
-    html += '<line class="ziffer-hilfslinie" x1="-8" y1="126" x2="108" y2="126"/>';
+    for (let feld = 0; feld < 10; feld++) {
+        let html = '';
+        html += '<line class="ziffer-hilfslinie" x1="-8" y1="14" x2="108" y2="14"/>';
+        html += '<line class="ziffer-hilfslinie" x1="-8" y1="126" x2="108" y2="126"/>';
 
-    daten.striche.forEach(s => {
-        html += `<path class="ziffer-bahn${m2.ohneHilfe ? ' blass' : ''}" d="${pfadAus(s)}"/>`;
-    });
-    daten.striche.forEach((s, i) => {
-        html += `<path class="ziffer-spur" id="m2Spur${i}" d=""/>`;
-    });
-    m2.punkte.forEach((liste, si) => liste.forEach((p, pi) => {
-        html += `<circle class="ziffer-punkt" id="m2P${si}_${pi}" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.5"/>`;
-    }));
-    /* Sichtbar ist immer nur der Startpunkt des Striches, der gerade dran
-       ist. Bei der Vier liegen beide Startpunkte fast uebereinander - zwei
-       gruene Punkte auf einmal wuerden das Kind nur verwirren. */
-    daten.striche.forEach((s, i) => {
-        html += `<g id="m2Start${i}">
+        daten.striche.forEach(s => {
+            html += `<path class="ziffer-bahn${m2.ohneHilfe ? ' blass' : ''}" d="${pfadAus(s)}"/>`;
+        });
+        daten.striche.forEach((s, i) => {
+            html += `<path class="ziffer-spur" id="m2Spur${feld}_${i}" d=""/>`;
+        });
+        m2.punkte.forEach((liste, si) => liste.forEach((p, pi) => {
+            html += `<circle class="ziffer-punkt" id="m2P${feld}_${si}_${pi}" cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="4.5"/>`;
+        }));
+        daten.striche.forEach((s, i) => {
+            html += `<g id="m2Start${feld}_${i}">
                     <circle class="ziffer-start" cx="${s[0][0].toFixed(1)}" cy="${s[0][1].toFixed(1)}" r="9"/>
                     <text class="ziffer-startzahl" x="${s[0][0].toFixed(1)}" y="${s[0][1].toFixed(1)}">${i + 1}</text>
                  </g>`;
-    });
-    html += '<circle id="m2DemoPunkt" class="ziffer-demo" cx="0" cy="0" r="7" style="display:none"/>';
-
-    svg.innerHTML = html;
+        });
+        html += `<circle id="m2DemoPunkt_${feld}" class="ziffer-demo" cx="0" cy="0" r="7" style="display:none"/>`;
+        const gespeicherteSpuren = m2.gespeicherteSpuren[feld] || [];
+        gespeicherteSpuren.forEach((spur, strich) => {
+            html = html.replace(`id="m2Spur${feld}_${strich}" d=""`, `id="m2Spur${feld}_${strich}" d="${spur}"`);
+        });
+        const erledigt = gespeicherteSpuren.length === daten.striche.length;
+        felder += `<div class="ziffer-schreibfeld${feld === m2.feld ? ' aktiv' : ''}${erledigt ? ' erledigt' : ''}" data-feld="${feld}"><svg id="m2Svg_${feld}" class="ziffer-svg" viewBox="-12 -8 124 156" aria-label="Schreibfeld ${feld + 1}">${html}</svg></div>`;
+    }
+    blatt.innerHTML = felder;
     m2Marken();
+}
+
+function m2SvgAktuell() {
+    return document.getElementById('m2Svg_' + m2.feld);
 }
 
 function m2Marken() {
     ZIFFERN[m2.ziffer].striche.forEach((s, i) => {
-        const marke = document.getElementById('m2Start' + i);
+        const marke = document.getElementById('m2Start' + m2.feld + '_' + i);
         if (marke) marke.style.display = (i === m2.strich && !m2.fertig) ? '' : 'none';
     });
     m2.punkte.forEach((liste, si) => liste.forEach((p, pi) => {
-        const kreis = document.getElementById('m2P' + si + '_' + pi);
+        const kreis = document.getElementById('m2P' + m2.feld + '_' + si + '_' + pi);
         if (!kreis) return;
         kreis.classList.remove('erledigt', 'ziel');
         if (si < m2.strich || (si === m2.strich && pi < m2.ziel)) kreis.classList.add('erledigt');
@@ -832,7 +845,7 @@ function svgPunkt(svg, ev) {
 
 function m2Down(ev) {
     if (m2.fertig || m2.demo) return;
-    const svg = document.getElementById('m2Svg');
+    const svg = m2SvgAktuell();
     const p = svgPunkt(svg, ev);
     const start = m2.punkte[m2.strich][0];
 
@@ -857,7 +870,7 @@ function m2Down(ev) {
 function m2Move(ev) {
     if (!m2.zeichnend) return;
     ev.preventDefault();
-    const svg = document.getElementById('m2Svg');
+    const svg = m2SvgAktuell();
     const p = svgPunkt(svg, ev);
     const letzte = m2.spur[m2.spur.length - 1];
     m2.spurLaenge += Math.hypot(p.x - letzte.x, p.y - letzte.y);
@@ -865,7 +878,7 @@ function m2Move(ev) {
         m2.spurZuWeit = true;
     }
     m2.spur.push(p);
-    const spurPfad = document.getElementById('m2Spur' + m2.strich);
+    const spurPfad = document.getElementById('m2Spur' + m2.feld + '_' + m2.strich);
     if (spurPfad) spurPfad.setAttribute('d', pfadAusSpur(m2.spur));
     m2Fortsetzen(p);
 }
@@ -886,7 +899,7 @@ function m2StrichFertig() {
     m2.zeichnend = false;
     const sollLaenge = strichLaenge(ZIFFERN[m2.ziffer].striche[m2.strich]);
     if (m2.spurZuWeit || m2.spurLaenge < sollLaenge * .55) {
-        const spurPfad = document.getElementById('m2Spur' + m2.strich);
+        const spurPfad = document.getElementById('m2Spur' + m2.feld + '_' + m2.strich);
         if (spurPfad) spurPfad.setAttribute('d', '');
         m2.spur = [];
         m2.ziel = 0;
@@ -921,7 +934,7 @@ function m2Up() {
     m2.zeichnend = false;
     /* Mitten im Strich losgelassen: der Strich wird neu begonnen. Eine
        Ziffer entsteht in einem Zug, sonst prägt sich der Weg nicht ein. */
-    const spurPfad = document.getElementById('m2Spur' + m2.strich);
+    const spurPfad = document.getElementById('m2Spur' + m2.feld + '_' + m2.strich);
     if (spurPfad) spurPfad.setAttribute('d', '');
     const hatteBegonnen = m2.ziel > 1;
     m2.spur = [];
@@ -942,15 +955,24 @@ function m2Up() {
 function m2Geschafft() {
     m2.fertig = true;
     m2.geschafft++;
+    m2.gespeicherteSpuren[m2.feld] = ZIFFERN[m2.ziffer].striche.map((_, strich) =>
+        document.getElementById('m2Spur' + m2.feld + '_' + strich).getAttribute('d'));
     m2Marken();
-    m2FortschrittAnzeigen(m2.durchgang);
+    m2FortschrittAnzeigen(m2.feld + 1);
     setzeFeedback('m2Feedback', 'Super! Das ist eine schöne ' + m2.ziffer + '. ⭐', 'richtig');
     sprich('Super! Das ist eine schöne ' + m2.ziffer + '.');
-    if (m2.durchgang === m2.durchgaenge) konfetti(20);
+    if (m2.durchgang === m2.durchgaenge && m2.feld === 9) konfetti(20);
     document.getElementById('m2Next').hidden = false;
 }
 
 function m2Weiter() {
+    if (m2.feld < 9) {
+        m2.feld++;
+        m2Neu();
+        m2FortschrittAnzeigen(m2.feld);
+        m2Zeichnen();
+        return;
+    }
     if (m2.durchgang < m2.durchgaenge) {
         m2.durchgang++;
     } else {
@@ -958,7 +980,7 @@ function m2Weiter() {
         m2.index++;
     }
     if (m2.index >= m2.liste.length) {
-        const gesamt = m2.liste.length * m2.durchgaenge;
+        const gesamt = m2.liste.length * 10;
         zeigeErgebnis('Ziffern schreiben', m2.geschafft, gesamt, 'modul2-color',
             () => m2Start(m2.alleAusgewaehlt ? 'alle' : m2.liste[0]));
         return;
@@ -972,7 +994,7 @@ function m2Vormachen() {
     m2Neu();
     const alle = [];
     ZIFFERN[m2.ziffer].striche.forEach((s, si) => s.forEach(p => alle.push({ x: p[0], y: p[1], si })));
-    const punkt = document.getElementById('m2DemoPunkt');
+    const punkt = document.getElementById('m2DemoPunkt_' + m2.feld);
     const spuren = {};
     let i = 0;
     punkt.style.display = '';
@@ -1195,7 +1217,7 @@ function karteWaehlen(karte) {
 
 /* Welche Slots gerade gefuellt werden koennen, haengt am aktiven Modul. */
 function aktiverBereich() {
-    return document.getElementById('m4GameScreen').classList.contains('active') ? 'm4Leine' : 'm5Gruppen';
+    return 'm5Gruppen';
 }
 
 /* Sobald eine Karte wandert, verschwinden alle gruenen und roten Raender -
@@ -1576,14 +1598,15 @@ function m5Weiter() {
 
 m2Aufbauen();
 
-const m2Svg = document.getElementById('m2Svg');
-m2Svg.addEventListener('pointerdown', m2Down);
-m2Svg.addEventListener('pointermove', m2Move);
-m2Svg.addEventListener('pointerup', m2Up);
-m2Svg.addEventListener('pointercancel', m2Up);
+const m2Blatt = document.getElementById('m2Blatt');
+m2Blatt.addEventListener('pointerdown', m2Down);
+m2Blatt.addEventListener('pointermove', m2Move);
+m2Blatt.addEventListener('pointerup', m2Up);
+m2Blatt.addEventListener('pointercancel', m2Up);
 
 ['m4Leine', 'm4Tisch', 'm5Gruppen', 'm5Tisch'].forEach(id => {
-    document.getElementById(id).addEventListener('pointerdown', kartenDown);
+    const element = document.getElementById(id);
+    if (element) element.addEventListener('pointerdown', kartenDown);
 });
 
 if (kannVorlesen()) window.speechSynthesis.onvoiceschanged = () => deutscheStimme();

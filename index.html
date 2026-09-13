@@ -22,7 +22,7 @@
             <h1 class="main-title">Zahlen-Start</h1>
             <div class="module-intro">
                 <span class="module-kicker">Mathe Klasse 1</span>
-                <p>Zahlen sehen, schreiben und ordnen. Tippe auf ein Bild.</p>
+                <p>Zahlen sehen und schreiben. Tippe auf ein Bild.</p>
             </div>
 
             <section class="module-group">
@@ -52,18 +52,13 @@
             <section class="module-group">
                 <div class="module-group-heading">
                     <span class="group-icon">✏️</span>
-                    <div><h2>Ziffern und Reihenfolge</h2><p>Schreiben und sortieren.</p></div>
+                    <div><h2>Ziffern schreiben</h2><p>Eine Ziffer zehnmal üben.</p></div>
                 </div>
                 <div class="button-grid">
                     <button class="operation-btn modul2" onclick="showScreen('m2SelectScreen')">
                         <span class="emoji">✏️</span>
                         <span class="text">Ziffern schreiben</span>
-                        <span class="card-hint">Mit dem Finger nachspuren</span>
-                    </button>
-                    <button class="operation-btn modul4" onclick="showScreen('m4SetupScreen')">
-                        <span class="emoji">📶</span>
-                        <span class="text">Zahlen ordnen</span>
-                        <span class="card-hint">Von klein nach groß</span>
+                        <span class="card-hint">Zehn gleiche Ziffern auf einem Blatt</span>
                     </button>
                 </div>
             </section>
@@ -168,6 +163,8 @@
                 <span class="m2-sterne" aria-hidden="true">
                     <span class="m2-stern">☆</span><span class="m2-stern">☆</span><span class="m2-stern">☆</span>
                     <span class="m2-stern">☆</span><span class="m2-stern">☆</span><span class="m2-stern">☆</span>
+                    <span class="m2-stern">☆</span><span class="m2-stern">☆</span><span class="m2-stern">☆</span>
+                    <span class="m2-stern">☆</span>
                 </span>
             </div>
         </div>
@@ -175,9 +172,7 @@
             <div class="task-area modul2-border">
                 <h2 class="exercise-title modul2-color" id="m2Prompt">Schreibe die 1</h2>
                 <p class="description" id="m2Spruch"></p>
-                <div class="ziffer-buehne">
-                    <svg id="m2Svg" class="ziffer-svg" viewBox="-12 -8 124 156" aria-label="Schreibfeld"></svg>
-                </div>
+                <div id="m2Blatt" class="ziffer-blatt" aria-label="Schreibblatt mit zehn Schreibfeldern"></div>
                 <p id="m2Feedback" class="feedback-text"></p>
                 <div class="button-area">
                     <button class="tool-btn" onclick="m2Vormachen()">👁️ Zeig mir wie</button>
@@ -237,86 +232,6 @@
                 <div class="button-area">
                     <button class="check-btn modul3-btn" id="m3Check" onclick="m3Pruefen()">Fertig!</button>
                     <button class="next-btn modul3-btn" id="m3Next" onclick="m3Weiter()" hidden>Weiter →</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- ============================================
-         Modul 4: Zahlen ordnen
-         ============================================ -->
-    <div id="m4SetupScreen" class="screen">
-        <div class="header">
-            <button class="back-btn" onclick="showScreen('startScreen')"><span class="arrow">←</span> Zurück</button>
-        </div>
-        <div class="content">
-            <div class="mode-selection-container modul4-border">
-                <h2 class="exercise-title modul4-color">Zahlen ordnen</h2>
-                <p class="description">Lege die Karten in die richtige Reihenfolge.</p>
-
-                <div class="wahl-block">
-                    <span class="wahl-titel">Bis wohin?</span>
-                    <div class="wahl-reihe">
-                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m4','raum',10)">bis 10</button>
-                        <button class="wahl-btn" onclick="setzeWahl(this,'m4','raum',20)">bis 20</button>
-                    </div>
-                </div>
-
-                <div class="wahl-block">
-                    <span class="wahl-titel">Wie viele Karten?</span>
-                    <div class="wahl-reihe">
-                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m4','anzahl',3)">3</button>
-                        <button class="wahl-btn" onclick="setzeWahl(this,'m4','anzahl',4)">4</button>
-                        <button class="wahl-btn" onclick="setzeWahl(this,'m4','anzahl',5)">5</button>
-                    </div>
-                </div>
-
-                <div class="wahl-block">
-                    <span class="wahl-titel">Was steht auf den Karten?</span>
-                    <div class="wahl-reihe">
-                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m4','karten','zahlen')">3️⃣ Zahlen</button>
-                        <button class="wahl-btn" onclick="setzeWahl(this,'m4','karten','punkte')">⚫ Punkte</button>
-                        <button class="wahl-btn" onclick="setzeWahl(this,'m4','karten','gemischt')">🔀 Gemischt</button>
-                    </div>
-                </div>
-
-                <div class="wahl-block">
-                    <span class="wahl-titel">In welche Richtung?</span>
-                    <div class="wahl-reihe">
-                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m4','richtung','auf')">▶ Klein nach groß</button>
-                        <button class="wahl-btn" onclick="setzeWahl(this,'m4','richtung','ab')">◀ Groß nach klein</button>
-                        <button class="wahl-btn" onclick="setzeWahl(this,'m4','richtung','gemischt')">🔀 Gemischt</button>
-                    </div>
-                </div>
-
-                <div class="button-area">
-                    <button class="check-btn modul4-btn" onclick="m4Start()">Los geht es!</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modul 4: Übung -->
-    <div id="m4GameScreen" class="screen">
-        <div class="header">
-            <button class="back-btn" onclick="showScreen('m4SetupScreen')"><span class="arrow">←</span> Zurück</button>
-            <button class="tool-btn vorlese-toggle" onclick="vorlesenAktuelleAufgabe()" aria-label="Aufgabe vorlesen" title="Aufgabe vorlesen">🔊</button>
-            <div class="progress">⭐ <span id="m4Score">0</span> / <span id="m4Nummer">1</span></div>
-        </div>
-        <div class="content">
-            <div class="task-area modul4-border">
-                <h2 class="exercise-title modul4-color" id="m4Prompt">Ordne von klein nach groß.</h2>
-                <div class="leine-wrap">
-                    <div class="leine-schnur"></div>
-                    <div id="m4Leine" class="karten-slots"></div>
-                </div>
-                <p class="hinweis">Karte antippen und dann einen Platz antippen – oder die Karte hinüberziehen.</p>
-                <div id="m4Tisch" class="karten-tisch"></div>
-                <p id="m4Feedback" class="feedback-text"></p>
-                <div class="button-area">
-                    <button class="check-btn modul4-btn" id="m4Check" onclick="m4Pruefen()">Fertig!</button>
-                    <button class="next-btn modul4-btn" id="m4Next" onclick="m4Weiter()" hidden>Weiter →</button>
                 </div>
             </div>
         </div>
