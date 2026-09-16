@@ -79,7 +79,8 @@ body {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
     box-shadow: var(--shadow); transition: transform .15s, box-shadow .15s;
 }
-.operation-btn:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+.operation-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+.operation-btn:disabled { background: #e0e0e0; color: #9e9e9e; box-shadow: none; cursor: not-allowed; filter: grayscale(1); }
 .operation-btn .emoji { font-size: 2.6rem; }
 .card-hint { font-size: .8rem; font-weight: 400; opacity: .92; }
 
@@ -255,7 +256,8 @@ body {
     background: var(--color-modul2-light); color: #0d47a1;
     cursor: pointer; box-shadow: var(--shadow);
 }
-.ziffer-kachel:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+.ziffer-kachel:hover:not(:disabled) { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
+.ziffer-kachel:disabled { background: #e0e0e0; color: #9e9e9e; box-shadow: none; cursor: not-allowed; }
 
 .ziffer-blatt {
     display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px;

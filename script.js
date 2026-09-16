@@ -705,17 +705,21 @@ function pfadAusSpur(spur) {
     return spur.map((p, i) => (i ? 'L' : 'M') + p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join(' ');
 }
 
+/* Ziffern, die im Unterricht schon eingefuehrt wurden. Weitere hier ergaenzen. */
+const M2_FREIGEGEBEN = [1, 2, 3, 4, 5];
+
 function m2Aufbauen() {
     const gitter = document.getElementById('m2ZiffernGitter');
     const reihenfolge = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
-    gitter.innerHTML = reihenfolge.map(z =>
-        `<button class="ziffer-kachel" onclick="m2Start(${z})">${z}</button>`).join('');
+    gitter.innerHTML = reihenfolge.map(z => M2_FREIGEGEBEN.includes(z)
+        ? `<button class="ziffer-kachel" onclick="m2Start(${z})">${z}</button>`
+        : `<button class="ziffer-kachel" disabled title="Kommt bald">${z}</button>`).join('');
 }
 
 function m2Start(was) {
     m2.alleAusgewaehlt = was === 'alle';
     m2.liste = was === 'alle'
-        ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 0]
+        ? [...M2_FREIGEGEBEN]
         : [was];
     m2.durchgaenge = 1;
     m2.index = 0;
