@@ -706,7 +706,7 @@ function pfadAusSpur(spur) {
 }
 
 /* Ziffern, die im Unterricht schon eingefuehrt wurden. Weitere hier ergaenzen. */
-const M2_FREIGEGEBEN = [1, 2, 3, 4, 5];
+const M2_FREIGEGEBEN = [1, 2, 3, 4, 5, 6];
 
 function m2Aufbauen() {
     const gitter = document.getElementById('m2ZiffernGitter');
@@ -779,6 +779,7 @@ function m2Neu() {
     m2.versuche = 0;
     m2.gespeicherteSpuren[m2.feld] = [];
     document.getElementById('m2Next').hidden = true;
+    clearTimeout(m2.weiterTimer);
     setzeFeedback('m2Feedback', '');
     m2Zeichnen();
 }
@@ -969,11 +970,16 @@ function m2Geschafft() {
     m2FortschrittAnzeigen(m2.feld + 1);
     setzeFeedback('m2Feedback', 'Super! Das ist eine schöne ' + m2.ziffer + '. ⭐', 'richtig');
     sprich('Super! Das ist eine schöne ' + m2.ziffer + '.');
-    if (m2.durchgang === m2.durchgaenge && m2.feld === 9) konfetti(20);
+    konfetti(m2.durchgang === m2.durchgaenge && m2.feld === 9 ? 20 : 12);
     document.getElementById('m2Next').hidden = false;
+    /* Nach dem kleinen Konfetti geht es von selbst weiter - ein Kind
+       muss nicht extra auf "Weiter" tippen, um im Fluss zu bleiben. */
+    clearTimeout(m2.weiterTimer);
+    m2.weiterTimer = setTimeout(m2Weiter, 1300);
 }
 
 function m2Weiter() {
+    clearTimeout(m2.weiterTimer);
     if (m2.feld < 9) {
         m2.feld++;
         m2Neu();
