@@ -10,6 +10,7 @@
      6. Kartenmotor     - tippen oder ziehen, fuer Modul 4 und 5
      7. Modul 4         - Zahlen der Groesse nach ordnen
      8. Modul 5         - Mengenbilder und Zahlen zuordnen
+     9. Modul 6         - Rechengeschichten (dazu/weg als Bildgeschichte)
 
    Erstklaesser lesen noch nicht. Darum wird jede Aufgabenstellung
    vorgelesen und jede Rueckmeldung bleibt kurz und bildhaft.
@@ -33,6 +34,7 @@ function showScreen(screenId) {
     if (m1.rundenTimer) { clearInterval(m1.rundenTimer); m1.rundenTimer = null; }
     if (m5.rundenTimer) { clearInterval(m5.rundenTimer); m5.rundenTimer = null; }
     if (m2.demo) { clearInterval(m2.demo); m2.demo = null; }
+    if (m2.ziffernTimer) { clearInterval(m2.ziffernTimer); m2.ziffernTimer = null; }
     if (m3.rundenTimer) { clearInterval(m3.rundenTimer); m3.rundenTimer = null; }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
     karteAbwaehlen();
@@ -166,7 +168,8 @@ const einstellungen = {
     m1: { raum: 5,  modus: 'eigen', bild: 'finger' },
     m3: { raum: 10, art: 'gemischt', modus: 'eigen' },
     m4: { raum: 10, anzahl: 3, karten: 'zahlen', richtung: 'auf' },
-    m5: { raum: 10, gruppen: 3, modus: 'eigen' }
+    m5: { raum: 10, gruppen: 3, modus: 'eigen' },
+    m6: { raum: 6, art: 'gemischt' }
 };
 
 function setzeWahl(btn, modul, schluessel, wert) {
@@ -636,10 +639,11 @@ const ZIFFERN = {
 const M2_TOLERANZ = 15;         // so nah muss der Finger am Kontrollpunkt sein
 const M2_START_TOLERANZ = 20;   // beim gruenen Startpunkt etwas grosszuegiger
 const M2_BAHN_TOLERANZ = 24;    // ausserhalb dieser Entfernung ist es kein Nachspuren
+const M2_ZIFFERNZEIT = 30;      // Sekunden pro Ziffer im Zeit-Modus
 
 const m2 = {
     liste: [1], index: 0, ziffer: 1,
-    alleAusgewaehlt: false,
+    alleAusgewaehlt: false, zeitModus: false, ziffernTimer: null, ziffernRestzeit: 0,
     durchgang: 1, durchgaenge: 1, feld: 0, ohneHilfe: false,
     strich: 0, ziel: 0, zeichnend: false, endpunktErreicht: false,
     spur: [], spurLaenge: 0, spurZuWeit: false,
@@ -717,8 +721,9 @@ function m2Aufbauen() {
 }
 
 function m2Start(was) {
-    m2.alleAusgewaehlt = was === 'alle';
-    m2.liste = was === 'alle'
+    m2.zeitModus = was === 'zeit';
+    m2.alleAusgewaehlt = was === 'alle' || was === 'zeit';
+    m2.liste = m2.alleAusgewaehlt
         ? [...M2_FREIGEGEBEN]
         : [was];
     m2.durchgaenge = 1;
@@ -728,6 +733,11 @@ function m2Start(was) {
     m2.gespeicherteSpuren = [];
     showScreen('m2GameScreen');
     m2Laden();
+}
+
+/* Womit "Nochmal" auf dem Ergebnisbildschirm weitermacht. */
+function m2NochmalModus() {
+    return m2.zeitModus ? 'zeit' : (m2.alleAusgewaehlt ? 'alle' : m2.liste[0]);
 }
 
 function m2Laden() {
@@ -750,6 +760,40 @@ function m2Laden() {
 
     m2Neu();
     sprich('Schreibe die ' + m2.ziffer + '. ' + daten.spruch);
+    m2ZiffernTimerStarten();
+}
+
+/* Im Zeit-Modus bekommt jede Ziffer 30 Sekunden - egal wie weit das
+   Schreibblatt schon ausgefuellt ist, dann geht es mit der naechsten
+   Ziffer weiter. */
+function m2ZiffernTimerStarten() {
+    m2ZiffernTimerStoppen();
+    const anzeige = document.getElementById('m2Ziffernzeit');
+    const wert = document.getElementById('m2ZiffernzeitWert');
+    anzeige.hidden = !m2.zeitModus;
+    if (!m2.zeitModus) return;
+    m2.ziffernRestzeit = M2_ZIFFERNZEIT;
+    wert.textContent = m2.ziffernRestzeit + 's';
+    m2.ziffernTimer = setInterval(() => {
+        m2.ziffernRestzeit--;
+        wert.textContent = m2.ziffernRestzeit + 's';
+        if (m2.ziffernRestzeit <= 0) m2ZiffernZeitAblauf();
+    }, 1000);
+}
+
+function m2ZiffernTimerStoppen() {
+    if (m2.ziffernTimer) { clearInterval(m2.ziffernTimer); m2.ziffernTimer = null; }
+}
+
+function m2ZiffernZeitAblauf() {
+    m2ZiffernTimerStoppen();
+    m2.index++;
+    if (m2.index >= m2.liste.length) {
+        const gesamt = m2.liste.length * 10;
+        zeigeErgebnis('Ziffern schreiben', m2.geschafft, gesamt, 'modul2-color', () => m2Start(m2NochmalModus()));
+        return;
+    }
+    m2Laden();
 }
 
 function m2FortschrittAnzeigen(erledigt = m2.durchgang - 1) {
@@ -995,8 +1039,7 @@ function m2Weiter() {
     }
     if (m2.index >= m2.liste.length) {
         const gesamt = m2.liste.length * 10;
-        zeigeErgebnis('Ziffern schreiben', m2.geschafft, gesamt, 'modul2-color',
-            () => m2Start(m2.alleAusgewaehlt ? 'alle' : m2.liste[0]));
+        zeigeErgebnis('Ziffern schreiben', m2.geschafft, gesamt, 'modul2-color', () => m2Start(m2NochmalModus()));
         return;
     }
     m2Laden();
@@ -1229,9 +1272,12 @@ function karteWaehlen(karte) {
     document.querySelectorAll('#' + aktiverBereich() + ' .karten-slot').forEach(s => s.classList.add('bereit'));
 }
 
-/* Welche Slots gerade gefuellt werden koennen, haengt am aktiven Modul. */
+/* Welche Slots gerade gefuellt werden koennen, haengt am aktiven Bildschirm. */
+const KARTEN_BEREICHE = { m4GameScreen: 'm4Leine', m5GameScreen: 'm5Gruppen', m6GameScreen: 'm6Formel' };
+
 function aktiverBereich() {
-    return 'm5Gruppen';
+    const bildschirm = document.querySelector('.screen.active');
+    return (bildschirm && KARTEN_BEREICHE[bildschirm.id]) || '';
 }
 
 /* Sobald eine Karte wandert, verschwinden alle gruenen und roten Raender -
@@ -1606,6 +1652,186 @@ function m5Weiter() {
 }
 
 
+/* ============================================================
+   9. Modul 6: Rechengeschichten
+
+   Ein Bild mit zwei farblich klar unterscheidbaren Gruppen desselben
+   Dings (z.B. gelbe und blaue Fische), darunter die passende
+   Rechenaufgabe. Rechenzeichen und Gleichheitszeichen stehen fest,
+   die drei Zahlen muessen aus dem Kartentisch in die Kaestchen
+   gezogen oder getippt werden - derselbe Kartenmotor wie in Modul 5.
+   ============================================================ */
+
+const RECHEN_DINGE = [
+    { einzahl: 'Fisch',   mehrzahl: 'Fische',   emoji: { gelb: '🐠', blau: '🐟' } },
+    { einzahl: 'Apfel',   mehrzahl: 'Äpfel',    emoji: { grün: '🍏', rot: '🍎' } },
+    { einzahl: 'Herz',    mehrzahl: 'Herzen',   emoji: { gelb: '💛', blau: '💙', rot: '❤️', grün: '💚', lila: '💜' } },
+    { einzahl: 'Kugel',   mehrzahl: 'Kugeln',   emoji: { gelb: '🟡', blau: '🔵', rot: '🔴', grün: '🟢', lila: '🟣', braun: '🟤' } },
+    { einzahl: 'Quadrat', mehrzahl: 'Quadrate', emoji: { gelb: '🟨', blau: '🟦', rot: '🟥', grün: '🟩', lila: '🟪', braun: '🟫' } }
+];
+
+function farbAdjektiv(farbe) {
+    return farbe === 'lila' ? 'lila' : farbe + 'e';
+}
+
+/* Zwei gleiche Mengen, egal in welcher Reihenfolge. */
+function gleicheMenge(a, b) {
+    const x = [...a].sort((p, q) => p - q);
+    const y = [...b].sort((p, q) => p - q);
+    return x.length === y.length && x.every((v, i) => v === y[i]);
+}
+
+const m6 = { aufgabe: 0, richtig: 0, teilA: 0, teilB: 0, ergebnis: 0, art: 'dazu', zeichen: '+', versuche: 0, fertig: false };
+
+/* Erst alle von Farbe A, dann alle von Farbe B - nicht mischen, damit die
+   beiden Gruppen als Farbblock links und rechts erkennbar bleiben. */
+function rechenBildHTML(ding, farbeA, anzahlA, farbeB, anzahlB) {
+    const teile = [
+        ...Array.from({ length: anzahlA }, () => ding.emoji[farbeA]),
+        ...Array.from({ length: anzahlB }, () => ding.emoji[farbeB])
+    ];
+    const bilder = teile.map(e => `<span>${e}</span>`).join('');
+    return `<div class="bild-gruppe"><div class="bild-menge">${bilder}</div></div>`;
+}
+
+function m6FormelHTML(zeichen) {
+    return `<div class="rechen-formel">
+                <div class="karten-slot" data-rolle="a"></div>
+                <span class="rechen-operator">${zeichen}</span>
+                <div class="karten-slot" data-rolle="b"></div>
+                <span class="rechen-operator">=</span>
+                <div class="karten-slot" data-rolle="c"></div>
+            </div>`;
+}
+
+function m6Start() {
+    m6.aufgabe = 0;
+    m6.richtig = 0;
+    showScreen('m6GameScreen');
+    m6Neu();
+}
+
+function m6Neu() {
+    m6.aufgabe++;
+    if (m6.aufgabe > RUNDE_AUFGABEN) {
+        zeigeErgebnis('Rechengeschichten', m6.richtig, RUNDE_AUFGABEN, 'modul6-color', m6Start);
+        return;
+    }
+
+    const raum = einstellungen.m6.raum;
+    const art = einstellungen.m6.art === 'gemischt' ? zufallAus(['dazu', 'weg']) : einstellungen.m6.art;
+    const ding = zufallAus(RECHEN_DINGE);
+    const [farbeA, farbeB] = mische(Object.keys(ding.emoji)).slice(0, 2);
+
+    let anzahlA, anzahlB;
+    if (art === 'dazu') {
+        anzahlA = zufallZahl(1, raum - 1);
+        anzahlB = zufallZahl(1, raum - anzahlA);
+        m6.ergebnis = anzahlA + anzahlB;
+    } else {
+        do {
+            anzahlA = zufallZahl(1, raum);
+            anzahlB = zufallZahl(1, raum);
+        } while (anzahlA === anzahlB);
+        const groesser = Math.max(anzahlA, anzahlB);
+        const kleiner = Math.min(anzahlA, anzahlB);
+        m6.ergebnis = groesser - kleiner;
+        // Zufaellig, welche Farbe die groessere Gruppe zeigt - sonst waere es immer dieselbe.
+        if (Math.random() < .5) { anzahlA = groesser; anzahlB = kleiner; } else { anzahlA = kleiner; anzahlB = groesser; }
+    }
+    m6.art = art;
+    m6.zeichen = art === 'dazu' ? '+' : '-';
+    m6.teilA = anzahlA;
+    m6.teilB = anzahlB;
+    m6.versuche = 0;
+    m6.fertig = false;
+
+    document.getElementById('m6Score').textContent = m6.richtig;
+    document.getElementById('m6Nummer').textContent = m6.aufgabe;
+    document.getElementById('m6Prompt').textContent = art === 'dazu'
+        ? 'Wie viele ' + ding.mehrzahl + ' sind es zusammen?'
+        : 'Wie viele ' + ding.mehrzahl + ' sind es mehr?';
+    document.getElementById('m6Beschreibung').textContent =
+        anzahlA + ' ' + farbAdjektiv(farbeA) + ' und ' + anzahlB + ' ' + farbAdjektiv(farbeB) + ' ' + ding.mehrzahl + '.';
+    document.getElementById('m6Check').hidden = false;
+    setzeFeedback('m6Feedback', '');
+
+    document.getElementById('m6Bild').innerHTML = rechenBildHTML(ding, farbeA, anzahlA, farbeB, anzahlB);
+    document.getElementById('m6Formel').innerHTML = m6FormelHTML(m6.zeichen);
+
+    const vorhandene = [m6.teilA, m6.teilB, m6.ergebnis];
+    let ablenker;
+    do { ablenker = zufallZahl(1, raum); } while (vorhandene.includes(ablenker));
+    const tisch = document.getElementById('m6Tisch');
+    tisch.innerHTML = mische([...vorhandene, ablenker]).map(z => karteHTML(z, false)).join('');
+    aktiverTisch = tisch;
+    karteAbwaehlen();
+
+    sprich(document.getElementById('m6Beschreibung').textContent + ' ' + document.getElementById('m6Prompt').textContent);
+}
+
+function m6Pruefen() {
+    if (m6.fertig) return;
+    const slots = [...document.querySelectorAll('#m6Formel .karten-slot')];
+    const karten = slots.map(s => s.querySelector('.zahl-karte'));
+
+    if (karten.includes(null)) {
+        setzeFeedback('m6Feedback', 'Es fehlt noch eine Zahl.', 'falsch');
+        sprich('Es fehlt noch eine Zahl.');
+        return;
+    }
+
+    const werte = karten.map(k => Number(k.dataset.zahl));
+    const abStimmt = m6.art === 'weg'
+        ? werte[0] === Math.max(m6.teilA, m6.teilB) && werte[1] === Math.min(m6.teilA, m6.teilB)
+        : gleicheMenge([werte[0], werte[1]], [m6.teilA, m6.teilB]);
+    const cStimmt = werte[2] === m6.ergebnis;
+
+    slots[0].classList.toggle('richtig', abStimmt);
+    slots[0].classList.toggle('falsch', !abStimmt);
+    slots[1].classList.toggle('richtig', abStimmt);
+    slots[1].classList.toggle('falsch', !abStimmt);
+    slots[2].classList.toggle('richtig', cStimmt);
+    slots[2].classList.toggle('falsch', !cStimmt);
+
+    if (abStimmt && cStimmt) {
+        m6.fertig = true;
+        m6.richtig++;
+        document.getElementById('m6Score').textContent = m6.richtig;
+        setzeFeedback('m6Feedback', 'Richtig! ⭐', 'richtig');
+        sprich('Richtig!');
+        konfetti(15);
+        document.getElementById('m6Check').hidden = true;
+        wartezeit = setTimeout(m6Neu, 1000);
+        return;
+    }
+
+    m6.versuche++;
+    if (m6.versuche === 1) {
+        setzeFeedback('m6Feedback', 'Schau noch einmal genau hin.', 'falsch');
+        sprich('Schau noch einmal genau hin.');
+        return;
+    }
+
+    /* Zweiter Fehlversuch: die App legt die Zahlen selbst richtig hin. */
+    m6.fertig = true;
+    const loesung = m6.art === 'weg'
+        ? [Math.max(m6.teilA, m6.teilB), Math.min(m6.teilA, m6.teilB), m6.ergebnis]
+        : [m6.teilA, m6.teilB, m6.ergebnis];
+    document.querySelectorAll('#m6GameScreen .zahl-karte').forEach(k => aktiverTisch.appendChild(k));
+    slots.forEach((slot, i) => {
+        slot.classList.remove('richtig', 'falsch');
+        const pool = [...aktiverTisch.querySelectorAll('.zahl-karte')];
+        const treffer = pool.find(k => Number(k.dataset.zahl) === loesung[i]);
+        if (treffer) slot.appendChild(treffer);
+    });
+    setzeFeedback('m6Feedback', 'So stimmt es: ' + loesung[0] + ' ' + m6.zeichen + ' ' + loesung[1] + ' = ' + loesung[2], 'falsch');
+    sprich('So stimmt es: ' + loesung[0] + ' ' + (m6.zeichen === '+' ? 'plus' : 'minus') + ' ' + loesung[1] + ' ist gleich ' + loesung[2] + '.');
+    document.getElementById('m6Check').hidden = true;
+    wartezeit = setTimeout(m6Neu, 2200);
+}
+
+
 /* ============================================
    Start
    ============================================ */
@@ -1618,7 +1844,7 @@ m2Blatt.addEventListener('pointermove', m2Move);
 m2Blatt.addEventListener('pointerup', m2Up);
 m2Blatt.addEventListener('pointercancel', m2Up);
 
-['m4Leine', 'm4Tisch', 'm5Gruppen', 'm5Tisch'].forEach(id => {
+['m4Leine', 'm4Tisch', 'm5Gruppen', 'm5Tisch', 'm6Formel', 'm6Tisch'].forEach(id => {
     const element = document.getElementById(id);
     if (element) element.addEventListener('pointerdown', kartenDown);
 });

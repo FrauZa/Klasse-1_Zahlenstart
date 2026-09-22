@@ -62,6 +62,20 @@
                     </button>
                 </div>
             </section>
+
+            <section class="module-group">
+                <div class="module-group-heading">
+                    <span class="group-icon">🧮</span>
+                    <div><h2>Rechnen</h2><p>Kommt bald.</p></div>
+                </div>
+                <div class="button-grid">
+                    <button class="operation-btn modul6" disabled title="Kommt bald" onclick="showScreen('m6SetupScreen')">
+                        <span class="emoji">🐟➕🐟</span>
+                        <span class="text">Rechengeschichten</span>
+                        <span class="card-hint">Zuhören, zählen, die Zahl finden</span>
+                    </button>
+                </div>
+            </section>
         </div>
     </div>
 
@@ -148,6 +162,7 @@
                 <div class="ziffern-wahl" id="m2ZiffernGitter"></div>
                 <div class="button-area">
                     <button class="check-btn modul2-btn" onclick="m2Start('alle')">🔟 Alle der Reihe nach</button>
+                    <button class="check-btn modul2-btn" onclick="m2Start('zeit')">⏱ Alle Ziffern auf Zeit</button>
                 </div>
             </div>
         </div>
@@ -167,6 +182,7 @@
                     <span class="m2-stern">☆</span>
                 </span>
             </div>
+            <div class="progress" id="m2Ziffernzeit" hidden>⏱ Nächste Ziffer in: <span id="m2ZiffernzeitWert">30s</span></div>
         </div>
         <div class="content">
             <div class="task-area modul2-border">
@@ -283,6 +299,58 @@
                 <div class="button-area">
                     <button class="check-btn modul5-btn" id="m5Check" onclick="m5Pruefen()">Fertig!</button>
                     <button class="next-btn modul5-btn" id="m5Next" onclick="m5Weiter()" hidden>Weiter →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ============================================
+         Modul 6: Rechengeschichten
+         ============================================ -->
+    <div id="m6SetupScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('startScreen')"><span class="arrow">←</span> Zurück</button>
+        </div>
+        <div class="content">
+            <div class="mode-selection-container modul6-border">
+                <h2 class="exercise-title modul6-color">Rechengeschichten</h2>
+                <p class="description">Höre die Geschichte an. Wie viele sind es am Ende?</p>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">Was passiert in der Geschichte?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m6','art','dazu')">➕</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'m6','art','weg')">➖</button>
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'m6','art','gemischt')">➕/➖</button>
+                    </div>
+                </div>
+
+                <div class="button-area">
+                    <button class="check-btn modul6-btn" onclick="m6Start()">Los geht es!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modul 6: Übung -->
+    <div id="m6GameScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('m6SetupScreen')"><span class="arrow">←</span> Zurück</button>
+            <button class="tool-btn vorlese-toggle" onclick="vorlesenAktuelleAufgabe()" aria-label="Aufgabe vorlesen" title="Aufgabe vorlesen">🔊</button>
+            <div class="progress">⭐ <span id="m6Score">0</span> / <span id="m6Nummer">1</span></div>
+        </div>
+        <div class="content">
+            <div class="task-area modul6-border">
+                <h2 class="exercise-title modul6-color" id="m6Prompt">Wie viele sind es zusammen?</h2>
+                <p class="description" id="m6Beschreibung"></p>
+                <div id="m6Bild"></div>
+                <div id="m6Formel"></div>
+                <p class="hinweis">Ziehe die richtigen Zahlen in die Kästchen.</p>
+                <div id="m6Tisch" class="karten-tisch"></div>
+                <p id="m6Feedback" class="feedback-text"></p>
+                <div class="button-area">
+                    <button class="check-btn modul6-btn" id="m6Check" onclick="m6Pruefen()">Fertig!</button>
                 </div>
             </div>
         </div>

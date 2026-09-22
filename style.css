@@ -10,6 +10,7 @@
     --color-modul3: #FB8C00;  --color-modul3-light: #FFCC80;   /* orange  - dazu/weg */
     --color-modul4: #9C27B0;  --color-modul4-light: #E1BEE7;   /* lila    - ordnen */
     --color-modul5: #00897B;  --color-modul5-light: #80CBC4;   /* tuerkis - Bild und Zahl */
+    --color-modul6: #EC407A;  --color-modul6-light: #F8BBD0;   /* pink    - Rechengeschichten */
 
     --color-akzent: #f57c00;
     --color-text: #333;
@@ -90,25 +91,30 @@ body {
 .modul3 { background: linear-gradient(135deg, #FB8C00, #FFCC80); }
 .modul4 { background: linear-gradient(135deg, #9C27B0, #CE93D8); }
 .modul5 { background: linear-gradient(135deg, #00897B, #80CBC4); }
+.modul6 { background: linear-gradient(135deg, #EC407A, #F8BBD0); }
 
 .modul1-color { color: var(--color-modul1); }
 .modul2-color { color: var(--color-modul2); }
 .modul3-color { color: var(--color-modul3); }
 .modul4-color { color: var(--color-modul4); }
 .modul5-color { color: var(--color-modul5); }
+.modul6-color { color: var(--color-modul6); }
 
 .modul1-border { border: 3px solid var(--color-modul1); }
 .modul2-border { border: 3px solid var(--color-modul2); }
 .modul3-border { border: 3px solid var(--color-modul3); }
 .modul4-border { border: 3px solid var(--color-modul4); }
 .modul5-border { border: 3px solid var(--color-modul5); }
+.modul6-border { border: 3px solid var(--color-modul6); }
 
 .modul1-btn { background: var(--color-modul1); color: #fff; }
 .modul2-btn { background: var(--color-modul2); color: #fff; }
 .modul3-btn { background: var(--color-modul3); color: #fff; }
 .modul4-btn { background: var(--color-modul4); color: #fff; }
 .modul5-btn { background: var(--color-modul5); color: #fff; }
+.modul6-btn { background: var(--color-modul6); color: #fff; }
 .modul3-bg { background: var(--color-modul3); color: #fff; }
+.modul6-bg { background: var(--color-modul6); color: #fff; }
 
 /* ============================================
    Allgemeine Bausteine
@@ -137,6 +143,7 @@ body {
 .check-btn.modul3-btn, .next-btn.modul3-btn { background: var(--color-modul3); color: #fff; }
 .check-btn.modul4-btn, .next-btn.modul4-btn { background: var(--color-modul4); color: #fff; }
 .check-btn.modul5-btn, .next-btn.modul5-btn { background: var(--color-modul5); color: #fff; }
+.check-btn.modul6-btn, .next-btn.modul6-btn { background: var(--color-modul6); color: #fff; }
 
 .back-btn {
     font-family: inherit; font-size: 1rem; font-weight: 600;
@@ -377,6 +384,12 @@ body {
 .bild-menge .zehnerfeld { width: min(100%, 250px); }
 .bild-menge .zehner-streifen { width: min(100%, 250px); padding: 14px; }
 .bild-menge span { width: 1.5em; text-align: center; }
+
+/* Modul 6: Rechengeschichten */
+#m6Bild { display: flex; justify-content: center; }
+#m6Bild .bild-gruppe { max-width: 420px; margin: 0 auto; }
+.rechen-operator { font-size: 2.2rem; font-weight: 700; color: #555; }
+.rechen-formel { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 18px 0 6px; flex-wrap: wrap; }
 .bild-gruppe .karten-slot { width: 100%; max-width: 110px; height: 118px; }
 .bild-gruppe .zahl-karte { width: 100%; max-width: 96px; height: 110px; font-size: clamp(2rem, 5vw, 2.7rem); }
 
