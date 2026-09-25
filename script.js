@@ -11,6 +11,7 @@
      7. Modul 4         - Zahlen der Groesse nach ordnen
      8. Modul 5         - Mengenbilder und Zahlen zuordnen
      9. Modul 6         - Rechengeschichten (dazu/weg als Bildgeschichte)
+    10. Modul 7         - Plusrechnen bis 6 (Rechnen mit Bewegungspause)
 
    Erstklaesser lesen noch nicht. Darum wird jede Aufgabenstellung
    vorgelesen und jede Rueckmeldung bleibt kurz und bildhaft.
@@ -1829,6 +1830,74 @@ function m6Pruefen() {
     sprich('So stimmt es: ' + loesung[0] + ' ' + (m6.zeichen === '+' ? 'plus' : 'minus') + ' ' + loesung[1] + ' ist gleich ' + loesung[2] + '.');
     document.getElementById('m6Check').hidden = true;
     wartezeit = setTimeout(m6Neu, 2200);
+}
+
+
+/* ============================================================
+   10. Modul 7: Plusrechnen bis 6
+
+   Rechts eine Plusaufgabe, links eine feste Liste: jede Zahl von
+   1 bis 6 steht fuer eine Bewegung. Das Kind rechnet im Kopf und
+   deckt die Loesung selbst auf - keine Wertung, kein Zeitdruck,
+   eine Bewegungspause zwischendurch.
+   ============================================================ */
+
+const BEWEGUNGEN = {
+    1: { emoji: '🐸', text: 'in die Hocke' },
+    2: { emoji: '👏', text: 'klatschen' },
+    3: { emoji: '🦩', text: 'auf einem Bein stehen' },
+    4: { emoji: '👃', text: 'an die Nase fassen' },
+    5: { emoji: '👟', text: 'zu den Füßen' },
+    6: { emoji: '🐰', text: 'Hasenohren' }
+};
+
+const m7 = { a: 0, b: 0, ergebnis: 0, geloest: false };
+
+function m7LegendeHTML() {
+    return Object.keys(BEWEGUNGEN).map(z => `
+        <div class="bewegungs-zeile">
+            <span class="bewegungs-zahl modul7-bg">${z}</span>
+            <span class="bewegungs-emoji">${BEWEGUNGEN[z].emoji}</span>
+            <span class="bewegungs-text">${BEWEGUNGEN[z].text}</span>
+        </div>`).join('');
+}
+
+function m7Start() {
+    showScreen('m7GameScreen');
+    document.getElementById('m7Legende').innerHTML = m7LegendeHTML();
+    m7Neu();
+}
+
+function m7Neu() {
+    m7.geloest = false;
+    m7.a = zufallZahl(1, 5);
+    m7.b = zufallZahl(1, 6 - m7.a);
+    m7.ergebnis = m7.a + m7.b;
+
+    document.getElementById('m7Aufgabe').textContent = m7.a + ' + ' + m7.b;
+    document.getElementById('m7Loesung').hidden = true;
+    document.getElementById('m7Loesung').innerHTML = '';
+    document.getElementById('m7Weiter').textContent = 'Weiter';
+    document.getElementById('m7Beschreibung').textContent = 'Wie viel ist ' + m7.a + ' plus ' + m7.b + '?';
+
+    sprich('Wie viel ist ' + m7.a + ' plus ' + m7.b + '?');
+}
+
+function m7Weiter() {
+    if (!m7.geloest) {
+        m7.geloest = true;
+        const bewegung = BEWEGUNGEN[m7.ergebnis];
+        document.getElementById('m7Aufgabe').textContent = m7.a + ' + ' + m7.b + ' = ' + m7.ergebnis;
+        document.getElementById('m7Loesung').hidden = false;
+        document.getElementById('m7Loesung').innerHTML =
+            `<span class="bewegungs-emoji-gross">${bewegung.emoji}</span><span class="bewegungs-text-gross">${bewegung.text}</span>`;
+        document.getElementById('m7Weiter').textContent = 'Nächste Aufgabe →';
+        document.getElementById('m7Beschreibung').textContent =
+            m7.a + ' + ' + m7.b + ' = ' + m7.ergebnis + '. ' + bewegung.text + '!';
+        sprich('Das sind ' + m7.ergebnis + '. ' + bewegung.text + '!');
+        return;
+    }
+    m7Neu();
 }
 
 

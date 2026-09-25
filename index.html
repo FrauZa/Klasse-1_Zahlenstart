@@ -66,13 +66,18 @@
             <section class="module-group">
                 <div class="module-group-heading">
                     <span class="group-icon">🧮</span>
-                    <div><h2>Rechnen</h2><p>Kommt bald.</p></div>
+                    <div><h2>Rechnen</h2><p>Rechnen mit Bewegung.</p></div>
                 </div>
                 <div class="button-grid">
                     <button class="operation-btn modul6" disabled title="Kommt bald" onclick="showScreen('m6SetupScreen')">
                         <span class="emoji">🐟➕🐟</span>
                         <span class="text">Rechengeschichten</span>
                         <span class="card-hint">Zuhören, zählen, die Zahl finden</span>
+                    </button>
+                    <button class="operation-btn modul7" onclick="m7Start()">
+                        <span class="emoji">🤸➕</span>
+                        <span class="text">Plusrechnen bis 6</span>
+                        <span class="card-hint">Rechnen und die Bewegung machen</span>
                     </button>
                 </div>
             </section>
@@ -351,6 +356,33 @@
                 <p id="m6Feedback" class="feedback-text"></p>
                 <div class="button-area">
                     <button class="check-btn modul6-btn" id="m6Check" onclick="m6Pruefen()">Fertig!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ============================================
+         Modul 7: Plusrechnen bis 6
+         ============================================ -->
+    <div id="m7GameScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('startScreen')"><span class="arrow">←</span> Zurück</button>
+            <button class="tool-btn vorlese-toggle" onclick="vorlesenAktuelleAufgabe()" aria-label="Aufgabe vorlesen" title="Aufgabe vorlesen">🔊</button>
+        </div>
+        <div class="content">
+            <div class="task-area modul7-border">
+                <h2 class="exercise-title modul7-color">Plusrechnen bis 6</h2>
+                <p class="description" id="m7Beschreibung">Rechne im Kopf, dann tippe auf „Weiter“.</p>
+                <div class="bewegungs-spiel">
+                    <div id="m7Legende" class="bewegungs-legende"></div>
+                    <div class="bewegungs-aufgabe">
+                        <span class="zielzahl modul7-bg" id="m7Aufgabe">2 + 3</span>
+                        <div id="m7Loesung" class="bewegungs-loesung" hidden></div>
+                    </div>
+                </div>
+                <div class="button-area">
+                    <button class="check-btn modul7-btn" id="m7Weiter" onclick="m7Weiter()">Weiter</button>
                 </div>
             </div>
         </div>

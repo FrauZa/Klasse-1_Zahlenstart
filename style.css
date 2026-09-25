@@ -11,6 +11,7 @@
     --color-modul4: #9C27B0;  --color-modul4-light: #E1BEE7;   /* lila    - ordnen */
     --color-modul5: #00897B;  --color-modul5-light: #80CBC4;   /* tuerkis - Bild und Zahl */
     --color-modul6: #EC407A;  --color-modul6-light: #F8BBD0;   /* pink    - Rechengeschichten */
+    --color-modul7: #5C6BC0;  --color-modul7-light: #C5CAE9;   /* indigo  - Plusrechnen bis 6 */
 
     --color-akzent: #f57c00;
     --color-text: #333;
@@ -92,6 +93,7 @@ body {
 .modul4 { background: linear-gradient(135deg, #9C27B0, #CE93D8); }
 .modul5 { background: linear-gradient(135deg, #00897B, #80CBC4); }
 .modul6 { background: linear-gradient(135deg, #EC407A, #F8BBD0); }
+.modul7 { background: linear-gradient(135deg, #5C6BC0, #C5CAE9); }
 
 .modul1-color { color: var(--color-modul1); }
 .modul2-color { color: var(--color-modul2); }
@@ -99,6 +101,7 @@ body {
 .modul4-color { color: var(--color-modul4); }
 .modul5-color { color: var(--color-modul5); }
 .modul6-color { color: var(--color-modul6); }
+.modul7-color { color: var(--color-modul7); }
 
 .modul1-border { border: 3px solid var(--color-modul1); }
 .modul2-border { border: 3px solid var(--color-modul2); }
@@ -106,6 +109,7 @@ body {
 .modul4-border { border: 3px solid var(--color-modul4); }
 .modul5-border { border: 3px solid var(--color-modul5); }
 .modul6-border { border: 3px solid var(--color-modul6); }
+.modul7-border { border: 3px solid var(--color-modul7); }
 
 .modul1-btn { background: var(--color-modul1); color: #fff; }
 .modul2-btn { background: var(--color-modul2); color: #fff; }
@@ -113,8 +117,10 @@ body {
 .modul4-btn { background: var(--color-modul4); color: #fff; }
 .modul5-btn { background: var(--color-modul5); color: #fff; }
 .modul6-btn { background: var(--color-modul6); color: #fff; }
+.modul7-btn { background: var(--color-modul7); color: #fff; }
 .modul3-bg { background: var(--color-modul3); color: #fff; }
 .modul6-bg { background: var(--color-modul6); color: #fff; }
+.modul7-bg { background: var(--color-modul7); color: #fff; }
 
 /* ============================================
    Allgemeine Bausteine
@@ -144,6 +150,7 @@ body {
 .check-btn.modul4-btn, .next-btn.modul4-btn { background: var(--color-modul4); color: #fff; }
 .check-btn.modul5-btn, .next-btn.modul5-btn { background: var(--color-modul5); color: #fff; }
 .check-btn.modul6-btn, .next-btn.modul6-btn { background: var(--color-modul6); color: #fff; }
+.check-btn.modul7-btn, .next-btn.modul7-btn { background: var(--color-modul7); color: #fff; }
 
 .back-btn {
     font-family: inherit; font-size: 1rem; font-weight: 600;
@@ -392,6 +399,26 @@ body {
 .rechen-formel { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 18px 0 6px; flex-wrap: wrap; }
 .bild-gruppe .karten-slot { width: 100%; max-width: 110px; height: 118px; }
 .bild-gruppe .zahl-karte { width: 100%; max-width: 96px; height: 110px; font-size: clamp(2rem, 5vw, 2.7rem); }
+
+/* Modul 7: Plusrechnen bis 6 */
+.bewegungs-spiel { display: flex; gap: 24px; align-items: center; justify-content: center; flex-wrap: wrap; margin: 20px 0; }
+.bewegungs-legende {
+    display: flex; flex-direction: column; gap: 16px; text-align: left;
+    background: #fbfbfb; border-radius: 18px; padding: 20px 24px; border: 3px solid #eceff1;
+    min-width: 260px;
+}
+.bewegungs-zeile { display: flex; align-items: center; gap: 14px; }
+.bewegungs-zahl {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 42px; height: 42px; border-radius: 12px; font-weight: 700; font-size: 1.3rem; flex-shrink: 0;
+}
+.bewegungs-emoji { font-size: 2.2rem; }
+.bewegungs-text { font-size: 1.1rem; color: #444; }
+.bewegungs-aufgabe { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 18px; min-width: 220px; }
+.bewegungs-aufgabe .zielzahl { min-width: 140px; padding: 0 20px; }
+.bewegungs-loesung { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.bewegungs-emoji-gross { font-size: 4rem; }
+.bewegungs-text-gross { font-size: 1.3rem; font-weight: 700; color: #444; text-align: center; }
 
 /* Konfetti */
 .konfetti {
