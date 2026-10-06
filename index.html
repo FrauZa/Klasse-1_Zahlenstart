@@ -79,6 +79,11 @@
                         <span class="text">Plusrechnen bis 6</span>
                         <span class="card-hint">Rechnen und die Bewegung machen</span>
                     </button>
+                    <button class="operation-btn modul8" onclick="showScreen('m8SelectScreen')">
+                        <span class="emoji">🍎➖</span>
+                        <span class="text">Minusrechner</span>
+                        <span class="card-hint">Zählen, streichen, rechnen</span>
+                    </button>
                 </div>
             </section>
         </div>
@@ -390,6 +395,70 @@
 
 
     <!-- ============================================
+         Modul 8: Minusrechner
+         ============================================ -->
+    <div id="m8SelectScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('startScreen')"><span class="arrow">←</span> Zurück</button>
+        </div>
+        <div class="content">
+            <div class="mode-selection-container modul8-border">
+                <h2 class="exercise-title modul8-color">Minusrechner</h2>
+                <p class="description">Was möchtest du üben?</p>
+                <div class="button-grid">
+                    <button class="operation-btn modul8" onclick="m8Start()">
+                        <span class="emoji">🍎➖</span>
+                        <span class="text">Rechengeschichten</span>
+                        <span class="card-hint">Äpfel zählen, streichen, rechnen</span>
+                    </button>
+                    <button class="operation-btn modul8" disabled title="Kommt bald">
+                        <span class="emoji">⚫➖</span>
+                        <span class="text">Punktebilder</span>
+                        <span class="card-hint">Kommt bald</span>
+                    </button>
+                    <button class="operation-btn modul8" disabled title="Kommt bald">
+                        <span class="emoji">🔢➖</span>
+                        <span class="text">Rechenaufgaben</span>
+                        <span class="card-hint">Kommt bald</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modul 8: Rechengeschichten -->
+    <div id="m8GameScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('m8SelectScreen')"><span class="arrow">←</span> Zurück</button>
+            <button class="tool-btn vorlese-toggle" onclick="vorlesenAktuelleAufgabe()" aria-label="Aufgabe vorlesen" title="Aufgabe vorlesen">🔊</button>
+        </div>
+        <div class="content">
+            <div class="task-area modul8-border">
+                <h2 class="exercise-title modul8-color" id="m8Prompt">Zähle die Äpfel</h2>
+                <p class="description" id="m8Beschreibung">Tippe jeden Apfel einmal an.</p>
+
+                <p class="rechenbild-label" id="m8DingLabel">Äpfel</p>
+                <div class="schritt-zeile">
+                    <span class="schritt-pfeil" id="m8PfeilApfel" hidden>➡️</span>
+                    <div id="m8Apfel" class="objekt-feld"></div>
+                </div>
+
+                <p class="rechenbild-label">Punkte</p>
+                <div class="schritt-zeile">
+                    <span class="schritt-pfeil" id="m8PfeilPunkte" hidden>➡️</span>
+                    <div id="m8Punkte" class="punkte-reihe"></div>
+                </div>
+
+                <div id="m8Formel"></div>
+                <div id="m8Tisch" class="karten-tisch"></div>
+
+                <p id="m8Feedback" class="feedback-text"></p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ============================================
          Gemeinsamer Ergebnis-Bildschirm
          ============================================ -->
     <div id="resultScreen" class="screen">
@@ -407,6 +476,6 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="script.js?v=20261006f"></script>
 </body>
 </html>

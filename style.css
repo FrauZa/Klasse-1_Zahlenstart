@@ -12,6 +12,8 @@
     --color-modul5: #00897B;  --color-modul5-light: #80CBC4;   /* tuerkis - Bild und Zahl */
     --color-modul6: #EC407A;  --color-modul6-light: #F8BBD0;   /* pink    - Rechengeschichten */
     --color-modul7: #5C6BC0;  --color-modul7-light: #C5CAE9;   /* indigo  - Plusrechnen bis 6 */
+    --color-modul8: #E53935;  --color-modul8-light: #FFCDD2;   /* rot     - Minusrechner: Minuend / was da war */
+    --color-modul8-blau: #1565C0; --color-modul8-blau-light: #BBDEFB; /* blau - Minusrechner: Subtrahend / weggenommen (statt gruen, wegen Rot-Gruen-Schwaeche) */
 
     --color-akzent: #f57c00;
     --color-text: #333;
@@ -94,6 +96,7 @@ body {
 .modul5 { background: linear-gradient(135deg, #00897B, #80CBC4); }
 .modul6 { background: linear-gradient(135deg, #EC407A, #F8BBD0); }
 .modul7 { background: linear-gradient(135deg, #5C6BC0, #C5CAE9); }
+.modul8 { background: linear-gradient(135deg, #E53935, #FFCDD2); }
 
 .modul1-color { color: var(--color-modul1); }
 .modul2-color { color: var(--color-modul2); }
@@ -102,6 +105,7 @@ body {
 .modul5-color { color: var(--color-modul5); }
 .modul6-color { color: var(--color-modul6); }
 .modul7-color { color: var(--color-modul7); }
+.modul8-color { color: var(--color-modul8); }
 
 .modul1-border { border: 3px solid var(--color-modul1); }
 .modul2-border { border: 3px solid var(--color-modul2); }
@@ -110,6 +114,7 @@ body {
 .modul5-border { border: 3px solid var(--color-modul5); }
 .modul6-border { border: 3px solid var(--color-modul6); }
 .modul7-border { border: 3px solid var(--color-modul7); }
+.modul8-border { border: 3px solid var(--color-modul8); }
 
 .modul1-btn { background: var(--color-modul1); color: #fff; }
 .modul2-btn { background: var(--color-modul2); color: #fff; }
@@ -118,9 +123,11 @@ body {
 .modul5-btn { background: var(--color-modul5); color: #fff; }
 .modul6-btn { background: var(--color-modul6); color: #fff; }
 .modul7-btn { background: var(--color-modul7); color: #fff; }
+.modul8-btn { background: var(--color-modul8); color: #fff; }
 .modul3-bg { background: var(--color-modul3); color: #fff; }
 .modul6-bg { background: var(--color-modul6); color: #fff; }
 .modul7-bg { background: var(--color-modul7); color: #fff; }
+.modul8-bg { background: var(--color-modul8); color: #fff; }
 
 /* ============================================
    Allgemeine Bausteine
@@ -151,6 +158,7 @@ body {
 .check-btn.modul5-btn, .next-btn.modul5-btn { background: var(--color-modul5); color: #fff; }
 .check-btn.modul6-btn, .next-btn.modul6-btn { background: var(--color-modul6); color: #fff; }
 .check-btn.modul7-btn, .next-btn.modul7-btn { background: var(--color-modul7); color: #fff; }
+.check-btn.modul8-btn, .next-btn.modul8-btn { background: var(--color-modul8); color: #fff; }
 
 .back-btn {
     font-family: inherit; font-size: 1rem; font-weight: 600;
@@ -325,6 +333,7 @@ body {
 .objekt-platz:hover { border-color: var(--color-modul3); }
 .objekt-platz.voll { border-style: solid; border-color: #ffe0b2; background: #fffaf3; }
 .objekt-platz.neu { animation: platz-pop .25s ease; }
+.objekt-platz.gezaehlt { border-style: solid; border-color: var(--color-modul8); background: var(--color-modul8-light); }
 .objekt-platz.gestrichen { opacity: .45; }
 .objekt-platz.gestrichen::after {
     content: ''; position: absolute; inset: 12% 6%;
@@ -419,6 +428,110 @@ body {
 .bewegungs-loesung { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .bewegungs-emoji-gross { font-size: 4rem; }
 .bewegungs-text-gross { font-size: 1.3rem; font-weight: 700; color: #444; text-align: center; }
+
+/* Modul 8: Minusrechner */
+.rechenbild-label { font-weight: 700; color: #555; margin: 14px 0 6px; text-align: center; }
+/* Noch nicht dran: nicht ausgegraut, nur gesperrt - der Pfeil zeigt,
+   wo es gerade weitergeht. */
+#m8Apfel:not(.aktiv), #m8Punkte:not(.aktiv) { pointer-events: none; }
+.karten-slot.gesperrt { pointer-events: none; }
+.schritt-zeile { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.schritt-zeile > .objekt-feld, .schritt-zeile > .punkte-reihe { margin: 0; }
+.schritt-pfeil { display: inline-block; font-size: 1.3rem; flex-shrink: 0; animation: pfeil-wackeln 1s ease-in-out infinite; }
+.schritt-pfeil[hidden] { display: none; }
+@keyframes pfeil-wackeln { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
+
+/* Die Dinge im Minusrechner (Aepfel, Autos, Schuhe, Sterne ...) sind zu
+   Beginn grau - heile mit durchgezogenem, kaputte/aufgegessene mit
+   gestricheltem Rand. Erst beim Antippen (zaehlen) werden sie bunt. Das
+   Symbol ist immer ein vollstaendiges Emoji; ".biss" beisst zusaetzlich
+   eine runde Ecke heraus (fuer Dinge ohne eigenes "kaputt"-Symbol). */
+#m8Apfel .objekt-platz { filter: grayscale(1); transition: filter .15s; }
+#m8Apfel .objekt-platz.ganz { border-style: solid; border-color: #9e9e9e; }
+#m8Apfel .objekt-platz.rest { opacity: .65; }
+#m8Apfel .objekt-platz.gezaehlt { filter: none; }
+/* Durchgestrichene Dinge bleiben so farbig, wie sie sind - nicht
+   ausgrauen. Der Strich ist blau: blau = weggenommen, passend zur
+   blauen Subtrahend-Zahl unten in der Rechnung. */
+#m8Apfel .objekt-platz.gestrichen { opacity: 1; }
+#m8Apfel .objekt-platz.gestrichen::after {
+    background: linear-gradient(to bottom right, transparent 45%, var(--color-modul8-blau) 45%, var(--color-modul8-blau) 55%, transparent 55%);
+}
+.ding-icon { display: inline-block; }
+#m8Apfel .objekt-platz.biss .ding-icon {
+    -webkit-mask-image: radial-gradient(circle .45em at 78% 20%, transparent 99%, #000 100%);
+            mask-image: radial-gradient(circle .45em at 78% 20%, transparent 99%, #000 100%);
+}
+
+/* Punktereihe: immer genau 10 Kreise in einem 10-spaltigen Grid -
+   dieselbe zuverlaessige Technik wie beim Apfelfeld (.objekt-feld),
+   damit die Kreise sicher antippbar sind und nichts umbricht. Nur die
+   ersten "Minuend"-vielen zaehlen mit. Dieselbe rote Farbe wie bei den
+   angetippten Aepfeln markiert angetippte Punkte. */
+/* 11 Spalten: 5 Kreise, eine feste Luecken-Spalte, 5 Kreise. So bleiben
+   die Abstaende innerhalb jeder Fuenfergruppe garantiert gleich (beide
+   nutzen denselben "gap"-Wert), nur zwischen Punkt 5 und 6 kommt die
+   zusaetzliche Luecken-Spalte dazu. */
+.punkte-reihe {
+    display: grid; grid-template-columns: repeat(5, 1fr) 14px repeat(5, 1fr); gap: 6px; align-items: center;
+    background: #fff; border-radius: 16px; padding: 12px; margin: 0 auto;
+    width: min(100%, 460px); box-shadow: 0 4px 14px rgba(0,0,0,.1); border: 3px solid #cfd8dc;
+}
+.punkt-platz {
+    width: 100%; aspect-ratio: 1; min-width: 0; min-height: 28px;
+    border-radius: 50%; border: 2px solid #b0bec5; background: #fff; cursor: pointer;
+    transition: background .12s, border-color .12s;
+}
+.punkt-platz:nth-child(1) { grid-column: 1; }
+.punkt-platz:nth-child(2) { grid-column: 2; }
+.punkt-platz:nth-child(3) { grid-column: 3; }
+.punkt-platz:nth-child(4) { grid-column: 4; }
+.punkt-platz:nth-child(5) { grid-column: 5; }
+.punkt-platz:nth-child(6) { grid-column: 7; }
+.punkt-platz:nth-child(7) { grid-column: 8; }
+.punkt-platz:nth-child(8) { grid-column: 9; }
+.punkt-platz:nth-child(9) { grid-column: 10; }
+.punkt-platz:nth-child(10) { grid-column: 11; }
+.punkt-platz.gezaehlt { background: var(--color-modul8); border-color: var(--color-modul8); }
+.punkt-platz.gestrichen { position: relative; }
+/* Blau statt Rot: der Kreis ist schon rot gefuellt (gezaehlt), ein roter
+   Strich waere darauf unsichtbar - und blau passt zur blauen
+   Subtrahend-Zahl (= weggenommen). */
+.punkt-platz.gestrichen::after {
+    content: ''; position: absolute; inset: -2px; border-radius: 50%;
+    background: linear-gradient(to bottom right, transparent 45%, var(--color-modul8-blau) 45%, var(--color-modul8-blau) 55%, transparent 55%);
+}
+.punkt-platz.gesperrt { cursor: default; pointer-events: none; opacity: .5; }
+.punkt-platz.ziel { border-color: var(--color-modul8); border-style: dashed; animation: punkt-ziel-pulsieren 1s ease-in-out infinite; }
+@keyframes punkt-ziel-pulsieren { 0%, 100% { box-shadow: none; } 50% { box-shadow: 0 0 0 4px var(--pulse-farbe, var(--color-modul8-light)); } }
+
+/* Minuend (a) rot, Subtrahend (b) blau, Ergebnis (c) schwarz/neutral -
+   so laesst sich auf einen Blick zuordnen, welche Zahl zu welchem Teil
+   der Rechnung gehoert. Blau statt Gruen wegen Rot-Gruen-Schwaeche.
+   Faerbt sich erst, wenn die Zahl richtig sitzt. */
+#m8Formel .karten-slot[data-rolle="a"].richtig { border-color: var(--color-modul8); background: var(--color-modul8-light); }
+#m8Formel .karten-slot[data-rolle="a"].richtig .zahl-karte { color: var(--color-modul8); }
+#m8Formel .karten-slot[data-rolle="b"].richtig { border-color: var(--color-modul8-blau); background: var(--color-modul8-blau-light); }
+#m8Formel .karten-slot[data-rolle="b"].richtig .zahl-karte { color: var(--color-modul8-blau); }
+#m8Formel .karten-slot[data-rolle="c"].richtig { border-color: #555; background: #eceff1; }
+#m8Formel .karten-slot[data-rolle="c"].richtig .zahl-karte { color: #333; }
+
+/* Das freie Kaestchen leuchtet von selbst - ein Antippen der Zahl
+   genuegt, sie landet automatisch genau hier. Die Leuchtfarbe verraet
+   schon vorab, welche Farbe die Zahl gleich bekommt. */
+#m8Formel .karten-slot[data-rolle="a"]:not(.gesperrt) {
+    --pulse-farbe: var(--color-modul8-light); border-color: var(--color-modul8); border-style: dashed;
+    animation: punkt-ziel-pulsieren 1s ease-in-out infinite;
+}
+#m8Formel .karten-slot[data-rolle="b"]:not(.gesperrt) {
+    --pulse-farbe: var(--color-modul8-blau-light); border-color: var(--color-modul8-blau); border-style: dashed;
+    animation: punkt-ziel-pulsieren 1s ease-in-out infinite;
+}
+#m8Formel .karten-slot[data-rolle="c"]:not(.gesperrt) {
+    --pulse-farbe: #e0e0e0; border-color: #555; border-style: dashed;
+    animation: punkt-ziel-pulsieren 1s ease-in-out infinite;
+}
+#m8Formel .karten-slot.richtig, #m8Formel .karten-slot.falsch { animation: none; }
 
 /* Konfetti */
 .konfetti {

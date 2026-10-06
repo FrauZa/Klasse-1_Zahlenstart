@@ -12,6 +12,7 @@
      8. Modul 5         - Mengenbilder und Zahlen zuordnen
      9. Modul 6         - Rechengeschichten (dazu/weg als Bildgeschichte)
     10. Modul 7         - Plusrechnen bis 6 (Rechnen mit Bewegungspause)
+    11. Modul 8         - Minusrechner: Rechengeschichten (Handlung-Bild-Zahl)
 
    Erstklaesser lesen noch nicht. Darum wird jede Aufgabenstellung
    vorgelesen und jede Rueckmeldung bleibt kurz und bildhaft.
@@ -1273,7 +1274,9 @@ function karteWaehlen(karte) {
     document.querySelectorAll('#' + aktiverBereich() + ' .karten-slot').forEach(s => s.classList.add('bereit'));
 }
 
-/* Welche Slots gerade gefuellt werden koennen, haengt am aktiven Bildschirm. */
+/* Welche Slots gerade gefuellt werden koennen, haengt am aktiven Bildschirm.
+   Modul 8 hat ein eigenes, einfaches Tipp-System (siehe m8KarteWaehlen) und
+   haengt hier nicht mit drin. */
 const KARTEN_BEREICHE = { m4GameScreen: 'm4Leine', m5GameScreen: 'm5Gruppen', m6GameScreen: 'm6Formel' };
 
 function aktiverBereich() {
@@ -1898,6 +1901,276 @@ function m7Weiter() {
         return;
     }
     m7Neu();
+}
+
+
+/* ============================================================
+   11. Modul 8: Minusrechner - Rechengeschichten
+
+   Das Apfelbild zeigt ganze und aufgegessene Aepfel (Apfelreste) von
+   Anfang an nebeneinander, beide grau - die Reste erkennt man am
+   gestrichelten Rand. Die Schritte fuehren von der Handlung zur Zahl:
+   erst Aepfel, dann Punkte abzaehlen, dann den Minuenden eintragen,
+   dann die Apfelreste antippen (das durchstreicht sie), dann die
+   Punkte durchstreichen, zum Schluss Subtrahend und Ergebnis
+   eintragen. Jeder Schritt schaltet erst den naechsten Bereich frei
+   (Klassen "aktiv" / "gesperrt").
+   ============================================================ */
+
+/* Jede Runde wird ein Ding ausgelost. "zustand" ist das Praedikativ
+   ("sind kaputt" - unveraendert, egal welches Geschlecht), die
+   attributive Form kommt bei Bedarf einfach mit "+en" dazu ("der
+   kaputten Autos" - im Genitiv Plural immer "-en", unabhaengig vom
+   Geschlecht). Bei "restEmoji" wird fuer den kaputten Zustand ein
+   eigenes Symbol verwendet (Stern), sonst wird dasselbe Emoji mit
+   einer "ausgebissenen" Ecke gezeigt (Apfel, Auto, Schuh). */
+const M8_DINGE = [
+    { mehrzahl: 'Äpfel',  emoji: '🍎',                  zustand: 'aufgegessen' },
+    { mehrzahl: 'Autos',  emoji: '🚗',                  zustand: 'kaputt' },
+    { mehrzahl: 'Schuhe', emoji: '👟',                  zustand: 'kaputt' },
+    { mehrzahl: 'Sterne', emoji: '⭐', restEmoji: '☆',  zustand: 'nicht mehr hell' }
+];
+
+const m8 = {
+    minuend: 0, subtrahend: 0, ergebnis: 0, phase: 'apfelZaehlen', ding: M8_DINGE[0],
+    apfelGezaehlt: [], apfelGestrichen: [], punkteGezaehlt: [], punkteGestrichen: []
+};
+
+function m8PhasenText(phase) {
+    const ding = m8.ding;
+    const attributiv = ding.zustand + 'en'; // Genitiv Plural: immer "-en"
+    switch (phase) {
+        case 'apfelZaehlen':
+            return { titel: 'Zähle die ' + ding.mehrzahl, info: 'Tippe alle ' + ding.mehrzahl + ' einmal an - auch die, die ' + ding.zustand + ' sind.' };
+        case 'punkteZaehlen':
+            return { titel: 'Zähle die Punkte', info: 'Tippe genauso viele Punkte an.' };
+        case 'minuend':
+            return { titel: 'Trage die Zahl ein', info: 'Tippe die passende Zahl an - sie springt ins leuchtende Kästchen.' };
+        case 'apfelStreichen':
+            return { titel: ding.mehrzahl + ' ' + ding.zustand, info: 'Tippe die ' + ding.mehrzahl + ' an, die ' + ding.zustand + ' sind.' };
+        case 'punkteStreichen':
+            return { titel: 'Streiche die Punkte', info: 'Streiche so viele Punkte durch, wie ' + ding.mehrzahl + ' ' + ding.zustand + ' sind.' };
+        case 'subtrahend':
+            return { titel: 'Trage die Zahl ein', info: 'Tippe die Zahl der ' + attributiv + ' ' + ding.mehrzahl + ' an - sie springt ins Kästchen.' };
+        case 'ergebnis':
+            return { titel: 'Wie viele sind noch da?', info: 'Tippe das Ergebnis an - es springt ins letzte Kästchen.' };
+        default:
+            return { titel: 'Super gemacht!', info: '' };
+    }
+}
+
+function m8Start() {
+    showScreen('m8GameScreen');
+    m8Neu();
+}
+
+function m8Neu() {
+    m8.minuend = zufallZahl(2, 6);
+    m8.subtrahend = zufallZahl(1, m8.minuend - 1);
+    m8.ergebnis = m8.minuend - m8.subtrahend;
+    m8.phase = 'apfelZaehlen';
+    m8.ding = zufallAus(M8_DINGE);
+    document.getElementById('m8DingLabel').textContent = m8.ding.mehrzahl;
+    m8.apfelGezaehlt = Array(m8.minuend).fill(false);
+    m8.apfelGestrichen = Array(m8.minuend).fill(false);
+    m8.punkteGezaehlt = Array(m8.minuend).fill(false);
+    m8.punkteGestrichen = Array(m8.minuend).fill(false);
+
+    /* Das Bild zeigt von Anfang an beides: die ersten "ergebnis" Dinge
+       sind heil (durchgezogener Rand), die letzten "subtrahend" sind
+       schon kaputt/aufgegessen (gestrichelt, blasser) - beide grau.
+       Durchgestrichen werden sie erst, wenn sie angetippt werden. */
+    document.getElementById('m8Apfel').innerHTML = Array.from({ length: m8.minuend }, (_, i) => {
+        const istRest = i >= m8.ergebnis;
+        const tausch = istRest && m8.ding.restEmoji;
+        const emoji = tausch ? m8.ding.restEmoji : m8.ding.emoji;
+        const klassen = ['objekt-platz', istRest ? 'rest' : 'ganz'];
+        if (istRest && !tausch) klassen.push('biss');
+        return `<div class="${klassen.join(' ')}" data-i="${i}" onclick="m8TippeApfel(${i})">
+            <span class="ding-icon">${emoji}</span>
+        </div>`;
+    }).join('');
+    /* Die Punktereihe ist immer 10 Kreise lang (10-Spalten-Grid, wie
+       das Apfelfeld) - nur die ersten "Minuend"-vielen zaehlen mit, der
+       Rest bleibt leer und ist nicht antippbar. Die kleine Luecke vor
+       dem sechsten Punkt kommt per CSS-Abstand, nicht als eigenes
+       Element - so bleibt das Grid bei exakt 10 Zellen. */
+    document.getElementById('m8Punkte').innerHTML = Array.from({ length: 10 }, (_, i) => i < m8.minuend
+        ? `<div class="punkt-platz" data-i="${i}" onclick="m8TippePunkt(${i})"></div>`
+        : `<div class="punkt-platz gesperrt"></div>`).join('');
+    document.getElementById('m8Formel').innerHTML = `
+        <div class="rechen-formel">
+            <span class="schritt-pfeil" data-pfeil="a" hidden>➡️</span>
+            <div class="karten-slot gesperrt" data-rolle="a"></div>
+            <span class="rechen-operator">−</span>
+            <span class="schritt-pfeil" data-pfeil="b" hidden>➡️</span>
+            <div class="karten-slot gesperrt" data-rolle="b"></div>
+            <span class="rechen-operator">=</span>
+            <span class="schritt-pfeil" data-pfeil="c" hidden>➡️</span>
+            <div class="karten-slot gesperrt" data-rolle="c"></div>
+        </div>`;
+    document.getElementById('m8Tisch').innerHTML = '';
+    setzeFeedback('m8Feedback', '');
+
+    m8PhaseAnzeigen();
+}
+
+function m8PhaseAnzeigen() {
+    const apfelAktiv = m8.phase === 'apfelZaehlen' || m8.phase === 'apfelStreichen';
+    const punkteAktiv = m8.phase === 'punkteZaehlen' || m8.phase === 'punkteStreichen';
+    document.getElementById('m8Apfel').classList.toggle('aktiv', apfelAktiv);
+    document.getElementById('m8Punkte').classList.toggle('aktiv', punkteAktiv);
+    document.getElementById('m8PfeilApfel').hidden = !apfelAktiv;
+    document.getElementById('m8PfeilPunkte').hidden = !punkteAktiv;
+
+    /* Waehrend des Streichens pulsieren genau die Punkte, die noch
+       durchgestrichen werden duerfen - so ist unmissverstaendlich klar,
+       wo getippt werden muss. */
+    document.querySelectorAll('#m8Punkte .punkt-platz').forEach((zelle, i) => {
+        zelle.classList.toggle('ziel', m8.phase === 'punkteStreichen' && i >= m8.ergebnis && i < m8.minuend && !zelle.classList.contains('gestrichen'));
+    });
+
+    const slots = [...document.querySelectorAll('#m8Formel .karten-slot')];
+    slots[0].classList.toggle('gesperrt', m8.phase !== 'minuend');
+    slots[1].classList.toggle('gesperrt', m8.phase !== 'subtrahend');
+    slots[2].classList.toggle('gesperrt', m8.phase !== 'ergebnis');
+
+    const pfeilRolle = { minuend: 'a', subtrahend: 'b', ergebnis: 'c' }[m8.phase];
+    document.querySelectorAll('#m8Formel .schritt-pfeil').forEach(pfeil => {
+        pfeil.hidden = pfeil.dataset.pfeil !== pfeilRolle;
+    });
+
+    const text = m8PhasenText(m8.phase);
+    document.getElementById('m8Prompt').textContent = text.titel;
+    document.getElementById('m8Beschreibung').textContent = text.info;
+
+    if (m8.phase === 'minuend' || m8.phase === 'subtrahend' || m8.phase === 'ergebnis') {
+        m8KartenZeigen();
+    } else {
+        document.getElementById('m8Tisch').innerHTML = '';
+    }
+
+    sprich(text.titel + '. ' + text.info);
+}
+
+function m8ZelleAktualisieren(containerId, i, gezaehlt, gestrichen) {
+    const zelle = document.querySelector('#' + containerId + ' [data-i="' + i + '"]');
+    if (!zelle) return;
+    zelle.classList.toggle('gezaehlt', gezaehlt);
+    zelle.classList.toggle('gestrichen', gestrichen);
+}
+
+/* Erst alle Aepfel einmal abzaehlen (ganze wie Reste), spaeter im
+   Schritt "apfelStreichen" nur noch die Reste antippen - erst dieses
+   zweite Antippen streicht sie durch. */
+function m8TippeApfel(i) {
+    if (m8.phase === 'apfelZaehlen') {
+        m8.apfelGezaehlt[i] = !m8.apfelGezaehlt[i];
+        m8ZelleAktualisieren('m8Apfel', i, m8.apfelGezaehlt[i], m8.apfelGestrichen[i]);
+        if (m8.apfelGezaehlt.every(Boolean)) {
+            m8.phase = 'punkteZaehlen';
+            m8PhaseAnzeigen();
+        }
+        return;
+    }
+
+    if (m8.phase === 'apfelStreichen' && i >= m8.ergebnis) {
+        m8.apfelGestrichen[i] = !m8.apfelGestrichen[i];
+        m8ZelleAktualisieren('m8Apfel', i, true, m8.apfelGestrichen[i]);
+        if (m8.apfelGestrichen.filter(Boolean).length === m8.subtrahend) {
+            m8.phase = 'punkteStreichen';
+            m8PhaseAnzeigen();
+        }
+    }
+}
+
+/* Die Punkte starten leer: erst abzaehlen (jeden Punkt einmal
+   antippen), danach genau Subtrahend-viele durchstreichen. */
+function m8TippePunkt(i) {
+    if (m8.phase === 'punkteZaehlen') {
+        m8.punkteGezaehlt[i] = !m8.punkteGezaehlt[i];
+        m8ZelleAktualisieren('m8Punkte', i, m8.punkteGezaehlt[i], false);
+        if (m8.punkteGezaehlt.every(Boolean)) {
+            m8.phase = 'minuend';
+            m8PhaseAnzeigen();
+        }
+        return;
+    }
+
+    /* Durchgestrichen werden duerfen nur die letzten "Subtrahend"-vielen
+       Punkte - dieselben Positionen wie bei den Apfelresten. So ist klar,
+       wo angefangen wird, und ein frueher Tipp kann das Kontingent nicht
+       aus Versehen schon verbrauchen, bevor man beim letzten Punkt ist. */
+    if (m8.phase === 'punkteStreichen' && i >= m8.ergebnis) {
+        m8.punkteGestrichen[i] = !m8.punkteGestrichen[i];
+        m8ZelleAktualisieren('m8Punkte', i, true, m8.punkteGestrichen[i]);
+        const zelle = document.querySelector('#m8Punkte [data-i="' + i + '"]');
+        if (zelle) zelle.classList.toggle('ziel', !m8.punkteGestrichen[i]);
+
+        const anzahl = m8.punkteGestrichen.filter(Boolean).length;
+        if (anzahl === m8.subtrahend) {
+            m8.phase = 'subtrahend';
+            m8PhaseAnzeigen();
+        } else {
+            document.getElementById('m8Beschreibung').textContent =
+                anzahl + ' von ' + m8.subtrahend + ' durchgestrichen - weiter so!';
+        }
+    }
+}
+
+function m8KartenZeigen() {
+    const erwartet = m8.phase === 'minuend' ? m8.minuend : m8.phase === 'subtrahend' ? m8.subtrahend : m8.ergebnis;
+    let ablenker;
+    do { ablenker = zufallZahl(1, 6); } while (ablenker === erwartet);
+    document.getElementById('m8Tisch').innerHTML = mische([erwartet, ablenker]).map(z =>
+        `<div class="zahl-karte" data-zahl="${z}" onclick="m8KarteWaehlen(this)">${z}</div>`).join('');
+}
+
+/* Ein Klick genuegt: das freie Kaestchen leuchtet schon (CSS, ueber
+   ":not(.gesperrt)"), ein Antippen der Zahl legt sie direkt hinein. */
+function m8KarteWaehlen(karte) {
+    const slot = document.querySelector('#m8Formel .karten-slot:not(.gesperrt)');
+    if (!slot) return;
+    const alt = slot.querySelector('.zahl-karte');
+    if (alt && alt !== karte) document.getElementById('m8Tisch').appendChild(alt);
+    slot.appendChild(karte);
+    slot.classList.remove('richtig', 'falsch');
+    m8KartePlatziert(slot, karte);
+}
+
+/* Wird aufgerufen, sobald eine Zahlenkarte in einem Kaestchen landet. */
+function m8KartePlatziert(slot, karte) {
+    const wert = Number(karte.dataset.zahl);
+    const erwartet = m8.phase === 'minuend' ? m8.minuend : m8.phase === 'subtrahend' ? m8.subtrahend : m8.ergebnis;
+
+    if (wert !== erwartet) {
+        slot.classList.add('falsch');
+        setzeFeedback('m8Feedback', 'Das passt noch nicht. Schau noch einmal.', 'falsch');
+        sprich('Das passt noch nicht.');
+        wartezeit = setTimeout(() => {
+            slot.classList.remove('falsch');
+            document.getElementById('m8Tisch').appendChild(karte);
+        }, 900);
+        return;
+    }
+
+    slot.classList.remove('falsch');
+    slot.classList.add('richtig');
+    document.getElementById('m8Tisch').innerHTML = '';
+    setzeFeedback('m8Feedback', '', '');
+
+    if (m8.phase === 'ergebnis') {
+        m8.phase = 'fertig';
+        m8PhaseAnzeigen();
+        konfetti(15);
+        setzeFeedback('m8Feedback', 'Super gemacht! ⭐', 'richtig');
+        sprich('Super gemacht!');
+        wartezeit = setTimeout(m8Neu, 2200);
+        return;
+    }
+
+    m8.phase = m8.phase === 'minuend' ? 'apfelStreichen' : 'ergebnis';
+    m8PhaseAnzeigen();
 }
 
 
