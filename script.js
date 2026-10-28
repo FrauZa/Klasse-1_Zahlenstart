@@ -712,7 +712,7 @@ function pfadAusSpur(spur) {
 }
 
 /* Ziffern, die im Unterricht schon eingefuehrt wurden. Weitere hier ergaenzen. */
-const M2_FREIGEGEBEN = [1, 2, 3, 4, 5, 6];
+const M2_FREIGEGEBEN = [1, 2, 3, 4, 5, 6, 7, 8];
 
 function m2Aufbauen() {
     const gitter = document.getElementById('m2ZiffernGitter');
