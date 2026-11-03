@@ -84,6 +84,25 @@
                         <span class="text">Minusrechner</span>
                         <span class="card-hint">Zählen, streichen, rechnen</span>
                     </button>
+                    <button class="operation-btn modul10" onclick="showScreen('krSetupScreen')">
+                        <span class="emoji">🧠➕➖</span>
+                        <span class="text">Kopfrechnen</span>
+                        <span class="card-hint">Plus und Minus im Kopf lösen</span>
+                    </button>
+                </div>
+            </section>
+
+            <section class="module-group">
+                <div class="module-group-heading">
+                    <span class="group-icon">🏠</span>
+                    <div><h2>Zahlenhäuser</h2><p>Zahlen zerlegen in der Stiftestraße.</p></div>
+                </div>
+                <div class="button-grid">
+                    <button class="operation-btn modul9" onclick="showScreen('zhSelectScreen')">
+                        <span class="emoji">🏠🐿️</span>
+                        <span class="text">Die Stiftestraße</span>
+                        <span class="card-hint">Wie viele Stifte wohnen noch dazu?</span>
+                    </button>
                 </div>
             </section>
         </div>
@@ -459,6 +478,233 @@
 
 
     <!-- ============================================
+         Modul: Kopfrechnen
+         ============================================ -->
+    <div id="krSetupScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('startScreen')"><span class="arrow">←</span> Zurück</button>
+        </div>
+        <div class="content">
+            <div class="mode-selection-container modul10-border">
+                <h2 class="exercise-title modul10-color">Kopfrechnen</h2>
+                <p class="description">Rechne im Kopf und tippe die richtige Zahl an.</p>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">Was möchtest du rechnen?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn" onclick="setzeWahl(this,'kr','art','plus')">➕ Plus</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'kr','art','minus')">➖ Minus</button>
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'kr','art','gemischt')">🔀 Gemischt</button>
+                    </div>
+                </div>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">Zahlenraum?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn" onclick="setzeWahl(this,'kr','raum',6)"><span class="wahl-symbol">★</span> bis 6</button>
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'kr','raum',10)"><span class="wahl-symbol">★★</span> bis 10</button>
+                    </div>
+                </div>
+
+                <div class="button-area">
+                    <button class="check-btn modul10-btn" onclick="krStart()">Los geht es!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kopfrechnen: Übung -->
+    <div id="krGameScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('krSetupScreen')"><span class="arrow">←</span> Zurück</button>
+            <button class="tool-btn vorlese-toggle" onclick="vorlesenAktuelleAufgabe()" aria-label="Aufgabe vorlesen" title="Aufgabe vorlesen">🔊</button>
+            <div class="progress">⭐ <span id="krScore">0</span> / <span id="krNummer">1</span></div>
+            <div class="progress">⏱ Restzeit: <span id="krZeitWert">2:00</span></div>
+        </div>
+        <div class="content">
+            <div class="task-area modul10-border">
+                <h2 class="exercise-title modul10-color" id="krAufgabe">4 + 3 = ?</h2>
+                <div id="krOptionen" class="zahl-optionen"></div>
+                <p id="krFeedback" class="feedback-text"></p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ============================================
+         Zahlenhäuser: Die Stiftestraße
+         ============================================ -->
+    <div id="zhSelectScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('startScreen')"><span class="arrow">←</span> Zurück</button>
+        </div>
+        <div class="content">
+            <div class="mode-selection-container modul9-border">
+                <h2 class="exercise-title modul9-color">Die Stiftestraße</h2>
+                <p class="description">In jedem Zahlenhaus wohnen so viele Stifte, wie die Dachzahl sagt. Welche Stufe möchtest du üben?</p>
+                <div class="button-grid">
+                    <button class="operation-btn modul9" onclick="zhS1Start()">
+                        <span class="emoji">✏️🏠</span>
+                        <span class="text">Stufe 1: Ein Stockwerk, Stifte</span>
+                        <span class="card-hint">Fehlende Stifte ins Zimmer legen</span>
+                    </button>
+                    <button class="operation-btn modul9" onclick="zhS2Start()">
+                        <span class="emoji">🔢🏠</span>
+                        <span class="text">Stufe 2: Ein Stockwerk, Zahlen</span>
+                        <span class="card-hint">Die fehlende Zahl antippen</span>
+                    </button>
+                    <button class="operation-btn modul9" onclick="zhS3Start()">
+                        <span class="emoji">✏️🏢</span>
+                        <span class="text">Stufe 3: Viele Stockwerke, Stifte</span>
+                        <span class="card-hint">Alle Zerlegungen in einem Haus finden</span>
+                    </button>
+                    <button class="operation-btn modul9" onclick="zhS4Start()">
+                        <span class="emoji">🔢🏢</span>
+                        <span class="text">Stufe 4: Viele Stockwerke, Zahlen</span>
+                        <span class="card-hint">Alle Zerlegungen inklusive Null</span>
+                    </button>
+                    <button class="operation-btn modul9" disabled title="Kommt bald">
+                        <span class="emoji">🔍🏠</span>
+                        <span class="text">Forscherstufe: Leeres Haus</span>
+                        <span class="card-hint">Kommt bald</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zahlenhäuser Stufe 1: Übung -->
+    <div id="zhS1GameScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('zhSelectScreen')"><span class="arrow">←</span> Zurück</button>
+            <button class="tool-btn vorlese-toggle" onclick="vorlesenAktuelleAufgabe()" aria-label="Aufgabe vorlesen" title="Aufgabe vorlesen">🔊</button>
+            <div class="progress" id="zhS1Fortschritt">⭐ <span id="zhS1Score">0</span> · Dachzahl <span id="zhS1Dachzahl">4</span></div>
+            <div class="progress">⏱ Restzeit: <span id="zhS1ZeitWert">2:00</span></div>
+        </div>
+        <div class="content">
+            <div class="task-area modul9-border">
+                <h2 class="exercise-title modul9-color" id="zhS1Prompt">Wie viele Stifte fehlen noch?</h2>
+
+                <div class="zahlenhaus">
+                    <div class="zh-dach" id="zhS1DachAnzeige">4</div>
+                    <div class="zh-haus-koerper">
+                        <div class="zh-stockwerk">
+                            <div class="objekt-feld zh-zimmer" id="zhS1Links"></div>
+                            <div class="zh-mitte">+</div>
+                            <div class="objekt-feld zh-zimmer" id="zhS1Rechts"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="eichhoernchen">
+                    <span class="eichhoernchen-icon">🐿️</span>
+                    <p class="eichhoernchen-text" id="zhS1Feedback">Tippe die fehlenden Stifte ins leere Zimmer.</p>
+                </div>
+
+                <div class="button-area">
+                    <button class="check-btn modul9-btn" id="zhS1Check" onclick="zhS1Pruefen()">Fertig!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zahlenhäuser Stufe 2: Übung -->
+    <div id="zhS2GameScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('zhSelectScreen')"><span class="arrow">←</span> Zurück</button>
+            <button class="tool-btn vorlese-toggle" onclick="vorlesenAktuelleAufgabe()" aria-label="Aufgabe vorlesen" title="Aufgabe vorlesen">🔊</button>
+            <div class="progress" id="zhS2Fortschritt">⭐ <span id="zhS2Score">0</span> · Dachzahl <span id="zhS2Dachzahl">4</span></div>
+            <div class="progress">⏱ Restzeit: <span id="zhS2ZeitWert">2:00</span></div>
+        </div>
+        <div class="content">
+            <div class="task-area modul9-border">
+                <h2 class="exercise-title modul9-color">Welche Zahl fehlt?</h2>
+
+                <div class="zahlenhaus">
+                    <div class="zh-dach" id="zhS2DachAnzeige">4</div>
+                    <div class="zh-haus-koerper">
+                        <div class="zh-stockwerk">
+                            <div class="zh-zahl-zimmer" id="zhS2Links"></div>
+                            <div class="zh-mitte">+</div>
+                            <div class="zh-zahl-zimmer" id="zhS2Rechts"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="zhS2Tisch" class="karten-tisch"></div>
+
+                <div class="eichhoernchen">
+                    <span class="eichhoernchen-icon">🐿️</span>
+                    <p class="eichhoernchen-text" id="zhS2Feedback">Tippe die passende Zahl an.</p>
+                </div>
+
+                <div class="button-area">
+                    <button class="tool-btn" id="zhS2HinweisBtn" onclick="zhS2HinweisUmschalten()" hidden>👀 Als Stifte zeigen</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zahlenhäuser Stufe 3: Übung -->
+    <div id="zhS3GameScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('zhSelectScreen')"><span class="arrow">←</span> Zurück</button>
+            <button class="tool-btn vorlese-toggle" onclick="vorlesenAktuelleAufgabe()" aria-label="Aufgabe vorlesen" title="Aufgabe vorlesen">🔊</button>
+            <div class="progress" id="zhS3Fortschritt">⭐ <span id="zhS3Score">0</span> · Dachzahl <span id="zhS3Dachzahl">3</span></div>
+            <div class="progress">⏱ Restzeit: <span id="zhS3ZeitWert">2:00</span></div>
+        </div>
+        <div class="content">
+            <div class="task-area modul9-border">
+                <h2 class="exercise-title modul9-color">Finde alle Zerlegungen</h2>
+                <p class="description">Rechts fehlen in jedem Stockwerk Stifte. Fülle alle Stockwerke, dann tippe auf „Fertig!“.</p>
+
+                <div class="zahlenhaus">
+                    <div class="zh-dach" id="zhS3DachAnzeige">3</div>
+                    <div class="zh-haus-koerper" id="zhS3Stockwerke"></div>
+                </div>
+
+                <div class="eichhoernchen">
+                    <span class="eichhoernchen-icon">🐿️</span>
+                    <p class="eichhoernchen-text" id="zhS3Feedback">Tippe die fehlenden Stifte in jedes Zimmer rechts.</p>
+                </div>
+
+                <div class="button-area">
+                    <button class="check-btn modul9-btn" id="zhS3Check" onclick="zhS3Pruefen()">Fertig!</button>
+                    <button class="next-btn modul9-btn" id="zhS3WeiterBtn" onclick="zhS3Weiter()" hidden>Nächstes Haus →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Zahlenhäuser Stufe 4: Übung -->
+    <div id="zhS4GameScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('zhSelectScreen')"><span class="arrow">←</span> Zurück</button>
+            <button class="tool-btn vorlese-toggle" onclick="vorlesenAktuelleAufgabe()" aria-label="Aufgabe vorlesen" title="Aufgabe vorlesen">🔊</button>
+            <div class="progress" id="zhS4Fortschritt">⭐ <span id="zhS4Score">0</span> · Dachzahl <span id="zhS4Dachzahl">3</span></div>
+            <div class="progress">⏱ Restzeit: <span id="zhS4ZeitWert">2:00</span></div>
+        </div>
+        <div class="content">
+            <div class="task-area modul9-border">
+                <h2 class="exercise-title modul9-color">Finde alle Zerlegungen</h2>
+                <p class="description">Tippe in jedem Stockwerk die passende Zahl an.</p>
+
+                <div class="zahlenhaus">
+                    <div class="zh-dach" id="zhS4DachAnzeige">3</div>
+                    <div class="zh-haus-koerper" id="zhS4Stockwerke"></div>
+                </div>
+
+                <p class="zh-s4-feedback" id="zhS4Feedback">Tippe in jedem Stockwerk die passende Zahl an.</p>
+
+                <div class="button-area">
+                    <button class="next-btn modul9-btn" id="zhS4WeiterBtn" onclick="zhS4Weiter()" hidden>Nächstes Haus →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ============================================
          Gemeinsamer Ergebnis-Bildschirm
          ============================================ -->
     <div id="resultScreen" class="screen">
@@ -476,6 +722,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=20261101a"></script>
+    <script src="script.js?v=20261103l"></script>
 </body>
 </html>

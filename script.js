@@ -13,6 +13,11 @@
      9. Modul 6         - Rechengeschichten (dazu/weg als Bildgeschichte)
     10. Modul 7         - Plusrechnen bis 6 (Rechnen mit Bewegungspause)
     11. Modul 8         - Minusrechner: Rechengeschichten (Handlung-Bild-Zahl)
+    12. Zahlenhaeuser   - Stiftestrasse Stufe 1 (ein Stockwerk, Stifte)
+    13. Zahlenhaeuser   - Stiftestrasse Stufe 2 (ein Stockwerk, Zahlen)
+    14. Zahlenhaeuser   - Stiftestrasse Stufe 3 (mehrere Stockwerke, Stifte)
+    15. Zahlenhaeuser   - Stiftestrasse Stufe 4 (mehrere Stockwerke, Zahlen)
+    16. Kopfrechnen     - Plus/Minus bis 6 oder 10, Zahl antippen
 
    Erstklaesser lesen noch nicht. Darum wird jede Aufgabenstellung
    vorgelesen und jede Rueckmeldung bleibt kurz und bildhaft.
@@ -38,6 +43,11 @@ function showScreen(screenId) {
     if (m2.demo) { clearInterval(m2.demo); m2.demo = null; }
     if (m2.ziffernTimer) { clearInterval(m2.ziffernTimer); m2.ziffernTimer = null; }
     if (m3.rundenTimer) { clearInterval(m3.rundenTimer); m3.rundenTimer = null; }
+    if (kr.rundenTimer) { clearInterval(kr.rundenTimer); kr.rundenTimer = null; }
+    if (zh.rundenTimer) { clearInterval(zh.rundenTimer); zh.rundenTimer = null; }
+    if (zh2.rundenTimer) { clearInterval(zh2.rundenTimer); zh2.rundenTimer = null; }
+    if (zh3.rundenTimer) { clearInterval(zh3.rundenTimer); zh3.rundenTimer = null; }
+    if (zh4.rundenTimer) { clearInterval(zh4.rundenTimer); zh4.rundenTimer = null; }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel();
     karteAbwaehlen();
 
@@ -77,7 +87,7 @@ function sprich(text) {
 function vorlesenAktuelleAufgabe() {
     const bildschirm = document.querySelector('.screen.active');
     if (!bildschirm) return;
-    const texte = [...bildschirm.querySelectorAll('.exercise-title, .description, .hinweis, .feedback-text')]
+    const texte = [...bildschirm.querySelectorAll('.exercise-title, .description, .hinweis, .feedback-text, .eichhoernchen-text, .zh-s4-feedback')]
         .map(el => el.textContent.trim())
         .filter(Boolean);
     lesVor(texte.join(' '));
@@ -171,7 +181,8 @@ const einstellungen = {
     m3: { raum: 10, art: 'gemischt', modus: 'eigen' },
     m4: { raum: 10, anzahl: 3, karten: 'zahlen', richtung: 'auf' },
     m5: { raum: 10, gruppen: 3, modus: 'eigen' },
-    m6: { raum: 6, art: 'gemischt' }
+    m6: { raum: 6, art: 'gemischt' },
+    kr: { raum: 10, art: 'gemischt' }
 };
 
 function setzeWahl(btn, modul, schluessel, wert) {
@@ -2171,6 +2182,779 @@ function m8KartePlatziert(slot, karte) {
 
     m8.phase = m8.phase === 'minuend' ? 'apfelStreichen' : 'ergebnis';
     m8PhaseAnzeigen();
+}
+
+
+/* ============================================================
+   12. Zahlenhaeuser: Die Stiftestrasse (Zahlzerlegung)
+
+   Jedes Haus hat ein Dach mit einer Zahl und ein Stockwerk mit zwei
+   Zimmern. Links + rechts ergibt zusammen immer die Dachzahl - das
+   Kind ergaenzt das leere Zimmer mit Stiften. Das Mathe-Eichhoernchen
+   gibt die Rueckmeldung. Stufe 1: ein Stockwerk, Stifte, keine Null.
+   Weitere Stufen (Zahlen, mehrere Stockwerke) folgen spaeter.
+   ============================================================ */
+
+const ZH_DACHZAHLEN_S1 = [4, 5, 6, 7];
+const ZH_KAPAZITAET = 10; // Plaetze im leeren Zimmer - mehr als je noetig
+const ZH_RUNDENZEIT = 120; // 2 Minuten pro Stufe, danach zurueck zur Stufenauswahl
+
+const zh = {
+    dachIndex: 0, dach: 0, hausListe: [], hausIndex: 0,
+    vorgegebenSeite: 'links', leerId: 'zhS1Rechts',
+    vorgegebenAnzahl: 0, gesuchtAnzahl: 0,
+    plaetze: [], versuche: 0, fertig: false, richtig: 0, gesamt: 0, rundenTimer: null, restzeit: 0
+};
+
+/* Gemeinsamer Rundentimer fuer alle vier Stiftestrasse-Stufen: nach
+   ZH_RUNDENZEIT Sekunden wird die Eingabe gesperrt, das Eichhoernchen
+   meldet richtig/falsch, und nach 5 Sekunden geht es zurueck zur
+   Stufenauswahl. feedbackId und ausblendenIds sind optional. */
+function zhRundenTimerStarten(zustand, anzeigeId, feedbackId, ausblendenIds, feedbackKlasse) {
+    zhRundenTimerStoppen(zustand);
+    zustand.restzeit = ZH_RUNDENZEIT;
+    zustand.feedbackId = feedbackId || null;
+    zustand.feedbackKlasse = feedbackKlasse || 'eichhoernchen-text';
+    zustand.ausblendenIds = ausblendenIds || [];
+    document.getElementById(anzeigeId).textContent = zhZeitText(zustand.restzeit);
+    zustand.rundenTimer = setInterval(() => {
+        zustand.restzeit--;
+        document.getElementById(anzeigeId).textContent = zhZeitText(zustand.restzeit);
+        if (zustand.restzeit <= 0) zhRundenTimerAblaufen(zustand);
+    }, 1000);
+}
+
+function zhZeitText(sekunden) {
+    return Math.floor(sekunden / 60) + ':' + String(sekunden % 60).padStart(2, '0');
+}
+
+function zhRundenTimerStoppen(zustand) {
+    if (zustand.rundenTimer) { clearInterval(zustand.rundenTimer); zustand.rundenTimer = null; }
+}
+
+function zhRundenTimerAblaufen(zustand) {
+    zhRundenTimerStoppen(zustand);
+    if (wartezeit) { clearTimeout(wartezeit); wartezeit = null; }
+    zustand.fertig = true;
+    zustand.ausblendenIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.hidden = true;
+    });
+
+    const falsch = Math.max(0, zustand.gesamt - zustand.richtig);
+    const text = 'Die Zeit ist um! ' + zustand.richtig + ' richtig und ' + falsch + ' falsch gelöst.';
+    if (zustand.feedbackId) {
+        const el = document.getElementById(zustand.feedbackId);
+        if (el) { el.textContent = text; el.className = zustand.feedbackKlasse; }
+    }
+    sprich(text);
+
+    wartezeit = setTimeout(() => showScreen('zhSelectScreen'), 5000);
+}
+
+/* Alle Zerlegungen einer Dachzahl ohne Null (links von 1 bis dach-1),
+   gemischt - jede kommt in der Runde genau einmal vor. */
+function zhZerlegungenOhneNull(dach) {
+    const liste = [];
+    for (let links = 1; links < dach; links++) liste.push(links);
+    return mische(liste);
+}
+
+function zhStiftHTML(anzahl) {
+    return Array.from({ length: anzahl }, () => `<div class="objekt-platz voll">✏️</div>`).join('');
+}
+
+function zhLeerHTML() {
+    return Array.from({ length: ZH_KAPAZITAET }, (_, i) =>
+        `<div class="objekt-platz" data-i="${i}" onclick="zhS1TippeLeer(${i})"></div>`).join('');
+}
+
+function zhS1Feedback(text, positiv) {
+    const el = document.getElementById('zhS1Feedback');
+    el.textContent = text;
+    el.className = 'eichhoernchen-text' + (positiv === true ? ' richtig' : positiv === false ? ' falsch' : '');
+}
+
+function zhS1Start() {
+    zh.dachIndex = 0;
+    zh.richtig = 0;
+    zh.gesamt = 0;
+    showScreen('zhS1GameScreen');
+    zhS1NeuesDach();
+    zhRundenTimerStarten(zh, 'zhS1ZeitWert', 'zhS1Feedback', ['zhS1Check']);
+}
+
+function zhS1NeuesDach() {
+    if (zh.dachIndex >= ZH_DACHZAHLEN_S1.length) {
+        zhRundenTimerStoppen(zh);
+        zeigeErgebnis('Die Stiftestraße', zh.richtig, zh.gesamt, 'modul9-color', zhS1Start);
+        return;
+    }
+    zh.dach = ZH_DACHZAHLEN_S1[zh.dachIndex];
+    zh.hausListe = zhZerlegungenOhneNull(zh.dach);
+    zh.hausIndex = 0;
+    zhS1NeuesHaus();
+}
+
+function zhS1NeuesHaus() {
+    if (zh.hausIndex >= zh.hausListe.length) {
+        zh.dachIndex++;
+        zhS1NeuesDach();
+        return;
+    }
+
+    const links = zh.hausListe[zh.hausIndex];
+    const rechts = zh.dach - links;
+    zh.vorgegebenSeite = Math.random() < .5 ? 'links' : 'rechts';
+    zh.vorgegebenAnzahl = zh.vorgegebenSeite === 'links' ? links : rechts;
+    zh.gesuchtAnzahl = zh.dach - zh.vorgegebenAnzahl;
+    zh.leerId = zh.vorgegebenSeite === 'links' ? 'zhS1Rechts' : 'zhS1Links';
+    const vorgegebenId = zh.vorgegebenSeite === 'links' ? 'zhS1Links' : 'zhS1Rechts';
+    zh.plaetze = Array(ZH_KAPAZITAET).fill(false);
+    zh.versuche = 0;
+    zh.fertig = false;
+
+    document.getElementById('zhS1DachAnzeige').textContent = zh.dach;
+    document.getElementById('zhS1Dachzahl').textContent = zh.dach;
+    document.getElementById('zhS1Score').textContent = zh.richtig;
+    document.getElementById('zhS1Check').hidden = false;
+    document.getElementById(vorgegebenId).innerHTML = zhStiftHTML(zh.vorgegebenAnzahl);
+    document.getElementById(zh.leerId).innerHTML = zhLeerHTML();
+    zhS1Feedback('Tippe die fehlenden Stifte ins leere Zimmer.');
+
+    sprich('Im Haus mit der Dachzahl ' + zh.dach + ' wohnen schon ' + zh.vorgegebenAnzahl + ' Stifte. Wie viele fehlen noch?');
+}
+
+function zhS1TippeLeer(i) {
+    if (zh.fertig) return;
+    zh.plaetze[i] = !zh.plaetze[i];
+    const zelle = document.querySelector('#' + zh.leerId + ' [data-i="' + i + '"]');
+    if (zelle) {
+        zelle.classList.toggle('voll', zh.plaetze[i]);
+        zelle.textContent = zh.plaetze[i] ? '✏️' : '';
+    }
+    zhS1Feedback('Tippe die fehlenden Stifte ins leere Zimmer.');
+}
+
+function zhS1Pruefen() {
+    if (zh.fertig) return;
+    zh.gesamt++;
+    const eingelegt = zh.plaetze.filter(Boolean).length;
+
+    if (eingelegt === zh.gesuchtAnzahl) {
+        zh.fertig = true;
+        zh.richtig++;
+        document.getElementById('zhS1Score').textContent = zh.richtig;
+        zhS1Feedback('Super gemacht! ' + zh.vorgegebenAnzahl + ' und ' + zh.gesuchtAnzahl + ' zusammen wohnen ' + zh.dach + ' Stifte im Stockwerk. ⭐', true);
+        sprich('Super gemacht! ' + zh.gesuchtAnzahl + ' Stifte.');
+        konfetti(15);
+        document.getElementById('zhS1Check').hidden = true;
+        wartezeit = setTimeout(zhS1Weiter, 1500);
+        return;
+    }
+
+    zh.versuche++;
+    const differenz = zh.gesuchtAnzahl - eingelegt;
+    if (zh.versuche === 1) {
+        const hinweis = differenz > 0
+            ? 'Da fehlen noch ' + differenz + ' Stift' + (differenz === 1 ? '' : 'e') + '.'
+            : 'Da sind ' + Math.abs(differenz) + ' Stift' + (Math.abs(differenz) === 1 ? '' : 'e') + ' zu viel.';
+        zhS1Feedback(hinweis, false);
+        sprich(hinweis);
+        return;
+    }
+
+    /* Zweiter Fehlversuch: das Eichhoernchen legt die richtige Anzahl
+       selbst hin. */
+    zh.fertig = true;
+    document.querySelectorAll('#' + zh.leerId + ' .objekt-platz').forEach((zelle, i) => {
+        const voll = i < zh.gesuchtAnzahl;
+        zelle.classList.toggle('voll', voll);
+        zelle.textContent = voll ? '✏️' : '';
+    });
+    zhS1Feedback('So viele waren es: ' + zh.gesuchtAnzahl + ' Stifte.', false);
+    sprich('So viele waren es: ' + zh.gesuchtAnzahl + ' Stifte.');
+    document.getElementById('zhS1Check').hidden = true;
+    wartezeit = setTimeout(zhS1Weiter, 2000);
+}
+
+function zhS1Weiter() {
+    zh.hausIndex++;
+    zhS1NeuesHaus();
+}
+
+
+/* ============================================================
+   13. Zahlenhaeuser Stufe 2: Ein Stockwerk, Zahlen
+
+   Wie Stufe 1, aber in den Zimmern stehen Zahlen statt Stiften. Die
+   Null kommt jetzt vor - als vorgegebene UND als gesuchte Zahl. Das
+   Kind tippt die passende Zahl an, sie springt direkt ins leuchtende
+   Zimmer (gleiches Prinzip wie die Rechenkaestchen im Minusrechner).
+   Als Hilfe laesst sich die vorgegebene Zahl in Stifte umschalten.
+   ============================================================ */
+
+const zh2 = {
+    dachIndex: 0, dach: 0, hausListe: [], hausIndex: 0,
+    vorgegebenSeite: 'links', vorgegebenAnzahl: 0, gesuchtAnzahl: 0,
+    versuche: 0, fertig: false, gezaehlt: false, hinweisAktiv: false, richtig: 0, gesamt: 0,
+    rundenTimer: null, restzeit: 0
+};
+
+/* Wie zhZerlegungenOhneNull, aber zusaetzlich genau eine Zerlegung mit
+   Null (0|dach oder dach|0, zufaellig) - "etwa eine Aufgabe mit 0". */
+function zhZerlegungenMitNull(dach) {
+    const liste = zhZerlegungenOhneNull(dach);
+    liste.push(Math.random() < .5 ? 0 : dach);
+    return mische(liste);
+}
+
+function zhS2Feedback(text, positiv) {
+    const el = document.getElementById('zhS2Feedback');
+    el.textContent = text;
+    el.className = 'eichhoernchen-text' + (positiv === true ? ' richtig' : positiv === false ? ' falsch' : '');
+}
+
+function zhS2Start() {
+    zh2.dachIndex = 0;
+    zh2.richtig = 0;
+    zh2.gesamt = 0;
+    showScreen('zhS2GameScreen');
+    zhS2NeuesDach();
+    zhRundenTimerStarten(zh2, 'zhS2ZeitWert', 'zhS2Feedback');
+}
+
+function zhS2NeuesDach() {
+    if (zh2.dachIndex >= ZH_DACHZAHLEN_S1.length) {
+        zhRundenTimerStoppen(zh2);
+        zeigeErgebnis('Die Stiftestraße', zh2.richtig, zh2.gesamt, 'modul9-color', zhS2Start);
+        return;
+    }
+    zh2.dach = ZH_DACHZAHLEN_S1[zh2.dachIndex];
+    zh2.hausListe = zhZerlegungenMitNull(zh2.dach);
+    zh2.hausIndex = 0;
+    zhS2NeuesHaus();
+}
+
+function zhS2NeuesHaus() {
+    if (zh2.hausIndex >= zh2.hausListe.length) {
+        zh2.dachIndex++;
+        zhS2NeuesDach();
+        return;
+    }
+
+    const links = zh2.hausListe[zh2.hausIndex];
+    const rechts = zh2.dach - links;
+    zh2.vorgegebenSeite = Math.random() < .5 ? 'links' : 'rechts';
+    zh2.vorgegebenAnzahl = zh2.vorgegebenSeite === 'links' ? links : rechts;
+    zh2.gesuchtAnzahl = zh2.dach - zh2.vorgegebenAnzahl;
+    zh2.versuche = 0;
+    zh2.fertig = false;
+    zh2.gezaehlt = false;
+    zh2.hinweisAktiv = false;
+
+    document.getElementById('zhS2DachAnzeige').textContent = zh2.dach;
+    document.getElementById('zhS2Dachzahl').textContent = zh2.dach;
+    document.getElementById('zhS2Score').textContent = zh2.richtig;
+    const hinweisBtn = document.getElementById('zhS2HinweisBtn');
+    hinweisBtn.hidden = true;
+    hinweisBtn.textContent = '👀 Als Stifte zeigen';
+
+    const vorgegebenId = zh2.vorgegebenSeite === 'links' ? 'zhS2Links' : 'zhS2Rechts';
+    const gesuchtId = zh2.vorgegebenSeite === 'links' ? 'zhS2Rechts' : 'zhS2Links';
+    document.getElementById(vorgegebenId).innerHTML = zh2.vorgegebenAnzahl;
+    document.getElementById(gesuchtId).innerHTML = '';
+    document.getElementById(gesuchtId).className = 'zh-zahl-zimmer zh-slot zh-slot-aktiv';
+
+    const ablenker = [];
+    while (ablenker.length < (zh2.dach > 1 ? 2 : 1)) {
+        const kandidat = zufallZahl(0, zh2.dach);
+        if (kandidat !== zh2.gesuchtAnzahl && !ablenker.includes(kandidat)) ablenker.push(kandidat);
+    }
+    const karten = mische([zh2.gesuchtAnzahl, ...ablenker]);
+    document.getElementById('zhS2Tisch').innerHTML = karten.map(z =>
+        `<div class="zahl-karte" data-zahl="${z}" onclick="zhS2KarteWaehlen(this)">${z}</div>`).join('');
+
+    zhS2Feedback('Tippe die passende Zahl an.');
+    sprich('Im Haus mit der Dachzahl ' + zh2.dach + ' wohnt schon die Zahl ' + zh2.vorgegebenAnzahl + '. Welche Zahl fehlt noch?');
+}
+
+function zhS2KarteWaehlen(karte) {
+    if (zh2.fertig) return;
+    if (!zh2.gezaehlt) { zh2.gesamt++; zh2.gezaehlt = true; }
+
+    const gesuchtId = zh2.vorgegebenSeite === 'links' ? 'zhS2Rechts' : 'zhS2Links';
+    const slot = document.getElementById(gesuchtId);
+    const wert = Number(karte.dataset.zahl);
+
+    if (wert === zh2.gesuchtAnzahl) {
+        zh2.fertig = true;
+        zh2.richtig++;
+        document.getElementById('zhS2Score').textContent = zh2.richtig;
+        slot.textContent = wert;
+        slot.className = 'zh-zahl-zimmer zh-slot richtig';
+        document.getElementById('zhS2Tisch').innerHTML = '';
+        document.getElementById('zhS2HinweisBtn').hidden = true;
+        zhS2Feedback('Super gemacht! ' + zh2.vorgegebenAnzahl + ' und ' + zh2.gesuchtAnzahl + ' zusammen ergeben ' + zh2.dach + '. ⭐', true);
+        sprich('Super gemacht! Das ist die ' + zh2.gesuchtAnzahl + '.');
+        konfetti(15);
+        wartezeit = setTimeout(zhS2Weiter, 1600);
+        return;
+    }
+
+    zh2.versuche++;
+    slot.classList.add('falsch');
+    wartezeit = setTimeout(() => slot.classList.remove('falsch'), 500);
+
+    if (zh2.versuche === 1) {
+        zhS2Feedback('Das passt noch nicht. Schau dir die Stifte an, wenn du möchtest.', false);
+        sprich('Das passt noch nicht.');
+        document.getElementById('zhS2HinweisBtn').hidden = false;
+        return;
+    }
+
+    /* Zweiter Fehlversuch: das Eichhoernchen zeigt die Loesung. */
+    zh2.fertig = true;
+    slot.textContent = zh2.gesuchtAnzahl;
+    slot.className = 'zh-zahl-zimmer zh-slot richtig';
+    document.getElementById('zhS2Tisch').innerHTML = '';
+    document.getElementById('zhS2HinweisBtn').hidden = true;
+    zhS2Feedback('So stimmt es: ' + zh2.gesuchtAnzahl + '.', false);
+    sprich('So stimmt es: ' + zh2.gesuchtAnzahl + '.');
+    wartezeit = setTimeout(zhS2Weiter, 2000);
+}
+
+/* Zeigt die vorgegebene Zahl wahlweise als Stifte - eine konkrete
+   Stuetze zum Nachzaehlen, ohne die gesuchte Zahl zu verraten. */
+function zhS2HinweisUmschalten() {
+    zh2.hinweisAktiv = !zh2.hinweisAktiv;
+    const vorgegebenId = zh2.vorgegebenSeite === 'links' ? 'zhS2Links' : 'zhS2Rechts';
+    const feld = document.getElementById(vorgegebenId);
+    const btn = document.getElementById('zhS2HinweisBtn');
+    if (zh2.hinweisAktiv) {
+        feld.className = 'objekt-feld zh-zimmer';
+        feld.innerHTML = zhStiftHTML(zh2.vorgegebenAnzahl);
+        btn.textContent = '🔢 Als Zahl zeigen';
+    } else {
+        feld.className = 'zh-zahl-zimmer';
+        feld.textContent = zh2.vorgegebenAnzahl;
+        btn.textContent = '👀 Als Stifte zeigen';
+    }
+}
+
+function zhS2Weiter() {
+    zh2.hausIndex++;
+    zhS2NeuesHaus();
+}
+
+
+/* ============================================================
+   14. Zahlenhaeuser Stufe 3: Mehrere Stockwerke, Stifte
+
+   Ein Haus bekommt auf einmal ALLE Zerlegungen der Dachzahl (ohne
+   Null), eine pro Stockwerk, in gemischter Reihenfolge - damit man
+   nicht einfach abzaehlen kann, welche noch fehlt. Links stehen immer
+   die vorgegebenen Stifte, rechts legt das Kind die fehlenden. Ein
+   gemeinsamer "Fertig!"-Knopf prueft alle Stockwerke auf einmal; nach
+   dem Haus kommt die Reflexionsfrage vom Eichhoernchen.
+   ============================================================ */
+
+const ZH_DACHZAHLEN_S3 = [3, 4, 5, 6];
+
+const zh3 = {
+    dachIndex: 0, dach: 0, stockwerke: [],
+    versuche: 0, fertig: false, gezaehlt: false, richtig: 0, gesamt: 0,
+    rundenTimer: null, restzeit: 0
+};
+
+function zhS3LeerHTML(floorIdx) {
+    return Array.from({ length: ZH_KAPAZITAET }, (_, j) =>
+        `<div class="objekt-platz" data-i="${j}" onclick="zhS3TippeLeer(${floorIdx}, ${j})"></div>`).join('');
+}
+
+function zhS3Feedback(text, positiv) {
+    const el = document.getElementById('zhS3Feedback');
+    el.textContent = text;
+    el.className = 'eichhoernchen-text' + (positiv === true ? ' richtig' : positiv === false ? ' falsch' : '');
+}
+
+function zhS3Start() {
+    zh3.dachIndex = 0;
+    zh3.richtig = 0;
+    zh3.gesamt = 0;
+    showScreen('zhS3GameScreen');
+    zhS3NeuesHaus();
+    zhRundenTimerStarten(zh3, 'zhS3ZeitWert', 'zhS3Feedback', ['zhS3Check', 'zhS3WeiterBtn']);
+}
+
+function zhS3NeuesHaus() {
+    if (zh3.dachIndex >= ZH_DACHZAHLEN_S3.length) {
+        zhRundenTimerStoppen(zh3);
+        zeigeErgebnis('Die Stiftestraße', zh3.richtig, zh3.gesamt, 'modul9-color', zhS3Start);
+        return;
+    }
+    zh3.dach = ZH_DACHZAHLEN_S3[zh3.dachIndex];
+    zh3.stockwerke = zhZerlegungenOhneNull(zh3.dach).map(links => ({
+        links, rechts: zh3.dach - links, plaetze: Array(ZH_KAPAZITAET).fill(false)
+    }));
+    zh3.versuche = 0;
+    zh3.fertig = false;
+    zh3.gezaehlt = false;
+
+    document.getElementById('zhS3DachAnzeige').textContent = zh3.dach;
+    document.getElementById('zhS3Dachzahl').textContent = zh3.dach;
+    document.getElementById('zhS3Score').textContent = zh3.richtig;
+    document.getElementById('zhS3Check').hidden = false;
+    document.getElementById('zhS3WeiterBtn').hidden = true;
+
+    document.getElementById('zhS3Stockwerke').innerHTML = zh3.stockwerke.map((s, i) => `
+        <div class="zh-stockwerk" id="zhS3Floor${i}">
+            <div class="objekt-feld zh-zimmer">${zhStiftHTML(s.links)}</div>
+            <div class="zh-mitte">+</div>
+            <div class="objekt-feld zh-zimmer" id="zhS3Rechts${i}">${zhS3LeerHTML(i)}</div>
+        </div>`).join('');
+
+    zhS3Feedback('Tippe die fehlenden Stifte in jedes Zimmer rechts.');
+    sprich('Finde alle Zerlegungen der Zahl ' + zh3.dach + '. Tippe die fehlenden Stifte in jedes Zimmer rechts.');
+}
+
+function zhS3TippeLeer(floorIdx, slotIdx) {
+    if (zh3.fertig) return;
+    const floor = zh3.stockwerke[floorIdx];
+    floor.plaetze[slotIdx] = !floor.plaetze[slotIdx];
+    const zelle = document.querySelector('#zhS3Rechts' + floorIdx + ' [data-i="' + slotIdx + '"]');
+    if (zelle) {
+        zelle.classList.toggle('voll', floor.plaetze[slotIdx]);
+        zelle.textContent = floor.plaetze[slotIdx] ? '✏️' : '';
+    }
+    document.getElementById('zhS3Floor' + floorIdx).classList.remove('floor-richtig', 'floor-falsch');
+}
+
+function zhS3Pruefen() {
+    if (zh3.fertig) return;
+    if (!zh3.gezaehlt) { zh3.gesamt++; zh3.gezaehlt = true; }
+
+    let alleRichtig = true;
+    const probleme = [];
+    zh3.stockwerke.forEach((floor, i) => {
+        const eingelegt = floor.plaetze.filter(Boolean).length;
+        const el = document.getElementById('zhS3Floor' + i);
+        const stimmt = eingelegt === floor.rechts;
+        el.classList.toggle('floor-richtig', stimmt);
+        el.classList.toggle('floor-falsch', !stimmt);
+        if (!stimmt) {
+            alleRichtig = false;
+            const diff = floor.rechts - eingelegt;
+            probleme.push(floor.links + ' + ? : ' + (diff > 0 ? diff + ' fehlen noch' : Math.abs(diff) + ' zu viel'));
+        }
+    });
+
+    if (alleRichtig) {
+        zh3.fertig = true;
+        zh3.richtig++;
+        document.getElementById('zhS3Score').textContent = zh3.richtig;
+        document.getElementById('zhS3Check').hidden = true;
+        konfetti(15);
+        zhS3ZeigeReflexion();
+        return;
+    }
+
+    zh3.versuche++;
+    if (zh3.versuche === 1) {
+        zhS3Feedback('Noch nicht ganz: ' + probleme.join(' · ') + '.', false);
+        sprich('Schau noch einmal genau hin.');
+        return;
+    }
+
+    /* Zweiter Fehlversuch: das Eichhoernchen legt die falschen
+       Stockwerke richtig hin. */
+    zh3.stockwerke.forEach((floor, i) => {
+        const eingelegt = floor.plaetze.filter(Boolean).length;
+        if (eingelegt !== floor.rechts) {
+            floor.plaetze = floor.plaetze.map((_, j) => j < floor.rechts);
+            document.querySelectorAll('#zhS3Rechts' + i + ' .objekt-platz').forEach((zelle, j) => {
+                const voll = j < floor.rechts;
+                zelle.classList.toggle('voll', voll);
+                zelle.textContent = voll ? '✏️' : '';
+            });
+            document.getElementById('zhS3Floor' + i).classList.remove('floor-falsch');
+            document.getElementById('zhS3Floor' + i).classList.add('floor-richtig');
+        }
+    });
+    zh3.fertig = true;
+    document.getElementById('zhS3Check').hidden = true;
+    zhS3ZeigeReflexion();
+}
+
+/* Reflexionsfrage nach dem Haus - keine Bewertung, nur ein Denkanstoss
+   mit Hinweis auf das Zerlegungsmuster. */
+function zhS3ZeigeReflexion() {
+    zhS3Feedback('Hast du alle Zerlegungen von ' + zh3.dach + ' gefunden?', true);
+    sprich('Hast du alle Zerlegungen gefunden?');
+    document.getElementById('zhS3WeiterBtn').hidden = false;
+}
+
+function zhS3Weiter() {
+    zh3.dachIndex++;
+    zhS3NeuesHaus();
+}
+
+
+/* ============================================================
+   15. Zahlenhaeuser Stufe 4: Mehrere Stockwerke, Zahlen
+
+   Kombiniert Stufe 2 (Zahlen, Null erlaubt) mit Stufe 3 (alle
+   Zerlegungen auf einmal in einem Haus, gemischte Reihenfolge) -
+   jetzt inklusive der Zerlegungen mit Null auf beiden Seiten. Jedes
+   Stockwerk hat seinen eigenen kleinen Kartentisch und validiert sich
+   sofort beim Antippen einer Zahl - kein gemeinsamer "Fertig!"-Knopf
+   noetig. Sind alle Stockwerke geloest, kommt die Reflexionsfrage.
+   ============================================================ */
+
+const zh4 = {
+    dachIndex: 0, dach: 0, stockwerke: [],
+    fertig: false, gezaehlt: false, richtig: 0, gesamt: 0,
+    rundenTimer: null, restzeit: 0
+};
+
+/* Alle Zerlegungen inklusive Null (links von 0 bis dach), gemischt. */
+function zhZerlegungenAlleMitNull(dach) {
+    const liste = [];
+    for (let links = 0; links <= dach; links++) liste.push(links);
+    return mische(liste);
+}
+
+function zhS4Feedback(text, positiv) {
+    const el = document.getElementById('zhS4Feedback');
+    el.textContent = text;
+    el.className = 'zh-s4-feedback' + (positiv === true ? ' richtig' : positiv === false ? ' falsch' : '');
+}
+
+function zhS4KartenHTML(floorIdx, gesucht, dach) {
+    const ablenker = [];
+    while (ablenker.length < 2) {
+        const kandidat = zufallZahl(0, dach);
+        if (kandidat !== gesucht && !ablenker.includes(kandidat)) ablenker.push(kandidat);
+    }
+    const karten = [gesucht, ...ablenker].sort((a, b) => a - b);
+    return karten.map(z =>
+        `<div class="zahl-karte-mini" data-zahl="${z}" onclick="zhS4KarteWaehlen(${floorIdx}, this)">${z}</div>`).join('');
+}
+
+/* Nur das naechste noch offene Stockwerk blinkt - alle anderen offenen
+   Stockwerke bleiben ruhig, damit klar ist, womit es weitergeht. */
+function zhS4AktualisierePulsierung() {
+    const naechster = zh4.stockwerke.findIndex(f => !f.geloest);
+    zh4.stockwerke.forEach((f, i) => {
+        const slot = document.getElementById('zhS4Slot' + i);
+        if (slot) slot.classList.toggle('zh-slot-aktiv', !f.geloest && i === naechster);
+    });
+}
+
+function zhS4Start() {
+    zh4.dachIndex = 0;
+    zh4.richtig = 0;
+    zh4.gesamt = 0;
+    showScreen('zhS4GameScreen');
+    zhS4NeuesHaus();
+    zhRundenTimerStarten(zh4, 'zhS4ZeitWert', 'zhS4Feedback', ['zhS4WeiterBtn'], 'zh-s4-feedback');
+}
+
+function zhS4NeuesHaus() {
+    if (zh4.dachIndex >= ZH_DACHZAHLEN_S3.length) {
+        zhRundenTimerStoppen(zh4);
+        zeigeErgebnis('Die Stiftestraße', zh4.richtig, zh4.gesamt, 'modul9-color', zhS4Start);
+        return;
+    }
+    zh4.dach = ZH_DACHZAHLEN_S3[zh4.dachIndex];
+    zh4.stockwerke = zhZerlegungenAlleMitNull(zh4.dach).map(links => ({
+        links, rechts: zh4.dach - links, versuche: 0, geloest: false
+    }));
+    zh4.fertig = false;
+    zh4.gezaehlt = false;
+
+    document.getElementById('zhS4DachAnzeige').textContent = zh4.dach;
+    document.getElementById('zhS4Dachzahl').textContent = zh4.dach;
+    document.getElementById('zhS4Score').textContent = zh4.richtig;
+    document.getElementById('zhS4WeiterBtn').hidden = true;
+
+    document.getElementById('zhS4Stockwerke').innerHTML = zh4.stockwerke.map((s, i) => `
+        <div class="zh-stockwerk" id="zhS4Floor${i}">
+            <div class="zh-zahl-zimmer">${s.links}</div>
+            <div class="zh-mitte">+</div>
+            <div class="zh-zahl-zimmer zh-slot" id="zhS4Slot${i}"></div>
+            <div class="zh-mini-tisch" id="zhS4Tisch${i}">${zhS4KartenHTML(i, s.rechts, zh4.dach)}</div>
+        </div>`).join('');
+    zhS4AktualisierePulsierung();
+
+    zhS4Feedback('Tippe in jedem Stockwerk die passende Zahl an.');
+    sprich('Finde alle Zerlegungen der Zahl ' + zh4.dach + ', auch mit der Null. Tippe in jedem Stockwerk die passende Zahl an.');
+}
+
+function zhS4KarteWaehlen(floorIdx, karte) {
+    if (zh4.fertig) return;
+    const floor = zh4.stockwerke[floorIdx];
+    if (floor.geloest) return;
+    if (!zh4.gezaehlt) { zh4.gesamt++; zh4.gezaehlt = true; }
+
+    const wert = Number(karte.dataset.zahl);
+    const slot = document.getElementById('zhS4Slot' + floorIdx);
+
+    if (wert === floor.rechts) {
+        floor.geloest = true;
+        slot.textContent = wert;
+        slot.className = 'zh-zahl-zimmer zh-slot richtig';
+        document.getElementById('zhS4Tisch' + floorIdx).innerHTML = '';
+        document.getElementById('zhS4Floor' + floorIdx).classList.add('floor-richtig');
+        zhS4AktualisierePulsierung();
+        zhS4PruefeGanzesHaus();
+        return;
+    }
+
+    floor.versuche++;
+    slot.classList.add('falsch');
+    wartezeit = setTimeout(() => slot.classList.remove('falsch'), 500);
+
+    if (floor.versuche >= 2) {
+        /* Nach zwei Fehlversuchen legt das Eichhoernchen dieses eine
+           Stockwerk richtig hin, die anderen bleiben offen. */
+        floor.geloest = true;
+        slot.textContent = floor.rechts;
+        slot.className = 'zh-zahl-zimmer zh-slot richtig';
+        document.getElementById('zhS4Tisch' + floorIdx).innerHTML = '';
+        document.getElementById('zhS4Floor' + floorIdx).classList.add('floor-richtig');
+        zhS4AktualisierePulsierung();
+        zhS4Feedback('So stimmt das Stockwerk mit der ' + floor.links + '.', false);
+        zhS4PruefeGanzesHaus();
+    }
+}
+
+function zhS4PruefeGanzesHaus() {
+    if (!zh4.stockwerke.every(f => f.geloest)) return;
+    zh4.fertig = true;
+    zh4.richtig++;
+    document.getElementById('zhS4Score').textContent = zh4.richtig;
+    konfetti(15);
+    zhS4ZeigeReflexion();
+}
+
+/* Reflexionsfrage nach dem Haus - wie Stufe 3, jetzt mit Hinweis auf
+   die Null. */
+function zhS4ZeigeReflexion() {
+    zhS4Feedback('Hast du alle Zerlegungen von ' + zh4.dach + ' gefunden - auch mit der Null?', true);
+    sprich('Hast du alle Zerlegungen gefunden, auch mit der Null?');
+    document.getElementById('zhS4WeiterBtn').hidden = false;
+}
+
+function zhS4Weiter() {
+    zh4.dachIndex++;
+    zhS4NeuesHaus();
+}
+
+
+/* ============================================================
+   16. Kopfrechnen: Plus und Minus, Zahlenraum waehlbar
+
+   Reine Kopfrechenaufgabe ohne Bild - die Aufgabe steht da, das Kind
+   tippt die richtige Zahl unter mehreren Optionen an. Feste Runde mit
+   RUNDE_AUFGABEN Aufgaben, danach der gemeinsame Ergebnisbildschirm.
+   ============================================================ */
+
+const KR_RUNDENZEIT = 120; // 2 Minuten pro Runde
+
+const kr = { aufgabe: 0, richtig: 0, gesamt: 0, a: 0, b: 0, zeichen: '+', ergebnis: 0, restzeit: 0, rundenTimer: null };
+
+function krStart() {
+    kr.aufgabe = 0;
+    kr.richtig = 0;
+    kr.gesamt = 0;
+    showScreen('krGameScreen');
+    krNeu();
+    krRundenTimerStarten();
+}
+
+function krRundenTimerStarten() {
+    krRundenTimerStoppen();
+    kr.restzeit = KR_RUNDENZEIT;
+    document.getElementById('krZeitWert').textContent = krZeitText();
+    kr.rundenTimer = setInterval(() => {
+        kr.restzeit--;
+        document.getElementById('krZeitWert').textContent = krZeitText();
+        if (kr.restzeit <= 0) krRundeBeenden();
+    }, 1000);
+}
+
+function krZeitText() {
+    return Math.floor(kr.restzeit / 60) + ':' + String(kr.restzeit % 60).padStart(2, '0');
+}
+
+function krRundenTimerStoppen() {
+    if (kr.rundenTimer) { clearInterval(kr.rundenTimer); kr.rundenTimer = null; }
+}
+
+/* Die Zeit ist um, egal wie viele der zehn Aufgaben schon geschafft
+   sind - gewertet wird, was bis hierhin beantwortet wurde. */
+function krRundeBeenden() {
+    krRundenTimerStoppen();
+    if (wartezeit) { clearTimeout(wartezeit); wartezeit = null; }
+    zeigeErgebnis('Kopfrechnen', kr.richtig, kr.gesamt, 'modul10-color', krStart);
+}
+
+function krNeu() {
+    kr.aufgabe++;
+    if (kr.aufgabe > RUNDE_AUFGABEN) {
+        krRundenTimerStoppen();
+        zeigeErgebnis('Kopfrechnen', kr.richtig, RUNDE_AUFGABEN, 'modul10-color', krStart);
+        return;
+    }
+
+    const raum = einstellungen.kr.raum;
+    const art = einstellungen.kr.art === 'gemischt' ? zufallAus(['plus', 'minus']) : einstellungen.kr.art;
+
+    if (art === 'plus') {
+        kr.a = zufallZahl(1, raum - 1);
+        kr.b = zufallZahl(1, raum - kr.a);
+        kr.ergebnis = kr.a + kr.b;
+        kr.zeichen = '+';
+    } else {
+        kr.a = zufallZahl(2, raum);
+        kr.b = zufallZahl(1, kr.a - 1);
+        kr.ergebnis = kr.a - kr.b;
+        kr.zeichen = '−';
+    }
+
+    document.getElementById('krScore').textContent = kr.richtig;
+    document.getElementById('krNummer').textContent = kr.aufgabe;
+    document.getElementById('krAufgabe').textContent = kr.a + ' ' + kr.zeichen + ' ' + kr.b + ' = ?';
+    setzeFeedback('krFeedback', '');
+
+    const optionen = zahlOptionen(kr.ergebnis, 0, raum).sort((a, b) => a - b);
+    document.getElementById('krOptionen').innerHTML = optionen.map(z =>
+        `<button class="zahl-option" onclick="krAntwort(${z}, this)">${z}</button>`).join('');
+
+    sprich('Wie viel ist ' + kr.a + ' ' + (kr.zeichen === '+' ? 'plus' : 'minus') + ' ' + kr.b + '?');
+}
+
+function krAntwort(zahl, btn) {
+    document.querySelectorAll('#krOptionen .zahl-option').forEach(b => b.disabled = true);
+    kr.gesamt++;
+
+    if (zahl === kr.ergebnis) {
+        btn.classList.add('richtig');
+        kr.richtig++;
+        document.getElementById('krScore').textContent = kr.richtig;
+        setzeFeedback('krFeedback', 'Richtig! ' + kr.a + ' ' + kr.zeichen + ' ' + kr.b + ' = ' + kr.ergebnis + '. ⭐', 'richtig');
+        sprich('Richtig! Das sind ' + kr.ergebnis + '.');
+        wartezeit = setTimeout(krNeu, 900);
+    } else {
+        btn.classList.add('falsch');
+        document.querySelectorAll('#krOptionen .zahl-option').forEach(b => {
+            if (Number(b.textContent) === kr.ergebnis) b.classList.add('richtig');
+        });
+        setzeFeedback('krFeedback', 'Richtig wären ' + kr.ergebnis + '.', 'richtig');
+        sprich('Es sind ' + kr.ergebnis + '. Schau noch einmal hin.');
+        wartezeit = setTimeout(krNeu, 1600);
+    }
 }
 
 

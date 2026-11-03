@@ -14,6 +14,8 @@
     --color-modul7: #5C6BC0;  --color-modul7-light: #C5CAE9;   /* indigo  - Plusrechnen bis 6 */
     --color-modul8: #E53935;  --color-modul8-light: #FFCDD2;   /* rot     - Minusrechner: Minuend / was da war */
     --color-modul8-blau: #1565C0; --color-modul8-blau-light: #BBDEFB; /* blau - Minusrechner: Subtrahend / weggenommen (statt gruen, wegen Rot-Gruen-Schwaeche) */
+    --color-modul9: #8D6E63;  --color-modul9-light: #D7CCC8;   /* braun   - Zahlenhaeuser: Stiftestrasse */
+    --color-modul10: #F9A825; --color-modul10-light: #FFECB3; /* gold    - Kopfrechnen */
 
     --color-akzent: #f57c00;
     --color-text: #333;
@@ -97,6 +99,8 @@ body {
 .modul6 { background: linear-gradient(135deg, #EC407A, #F8BBD0); }
 .modul7 { background: linear-gradient(135deg, #5C6BC0, #C5CAE9); }
 .modul8 { background: linear-gradient(135deg, #E53935, #FFCDD2); }
+.modul9 { background: linear-gradient(135deg, #8D6E63, #D7CCC8); }
+.modul10 { background: linear-gradient(135deg, #F9A825, #FFECB3); }
 
 .modul1-color { color: var(--color-modul1); }
 .modul2-color { color: var(--color-modul2); }
@@ -106,6 +110,8 @@ body {
 .modul6-color { color: var(--color-modul6); }
 .modul7-color { color: var(--color-modul7); }
 .modul8-color { color: var(--color-modul8); }
+.modul9-color { color: var(--color-modul9); }
+.modul10-color { color: var(--color-modul10); }
 
 .modul1-border { border: 3px solid var(--color-modul1); }
 .modul2-border { border: 3px solid var(--color-modul2); }
@@ -115,6 +121,8 @@ body {
 .modul6-border { border: 3px solid var(--color-modul6); }
 .modul7-border { border: 3px solid var(--color-modul7); }
 .modul8-border { border: 3px solid var(--color-modul8); }
+.modul9-border { border: 3px solid var(--color-modul9); }
+.modul10-border { border: 3px solid var(--color-modul10); }
 
 .modul1-btn { background: var(--color-modul1); color: #fff; }
 .modul2-btn { background: var(--color-modul2); color: #fff; }
@@ -124,6 +132,8 @@ body {
 .modul6-btn { background: var(--color-modul6); color: #fff; }
 .modul7-btn { background: var(--color-modul7); color: #fff; }
 .modul8-btn { background: var(--color-modul8); color: #fff; }
+.modul9-btn { background: var(--color-modul9); color: #fff; }
+.modul10-btn { background: var(--color-modul10); color: #fff; }
 .modul3-bg { background: var(--color-modul3); color: #fff; }
 .modul6-bg { background: var(--color-modul6); color: #fff; }
 .modul7-bg { background: var(--color-modul7); color: #fff; }
@@ -159,6 +169,8 @@ body {
 .check-btn.modul6-btn, .next-btn.modul6-btn { background: var(--color-modul6); color: #fff; }
 .check-btn.modul7-btn, .next-btn.modul7-btn { background: var(--color-modul7); color: #fff; }
 .check-btn.modul8-btn, .next-btn.modul8-btn { background: var(--color-modul8); color: #fff; }
+.check-btn.modul9-btn, .next-btn.modul9-btn { background: var(--color-modul9); color: #fff; }
+.check-btn.modul10-btn, .next-btn.modul10-btn { background: var(--color-modul10); color: #fff; }
 
 .back-btn {
     font-family: inherit; font-size: 1rem; font-weight: 600;
@@ -319,12 +331,12 @@ body {
 }
 
 .objekt-feld {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+    display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px;
     max-width: 460px; margin: 0 auto; padding: 12px;
     background: #fbfbfb; border-radius: 18px;
 }
 .objekt-platz {
-    aspect-ratio: 1; border: 3px dashed #dcdcdc; border-radius: 14px;
+    aspect-ratio: 1; min-width: 0; border: 3px dashed #dcdcdc; border-radius: 14px;
     background: #fff; font-size: clamp(1.6rem, 6vw, 2.4rem);
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; position: relative; user-select: none;
@@ -532,6 +544,78 @@ body {
     animation: punkt-ziel-pulsieren 1s ease-in-out infinite;
 }
 #m8Formel .karten-slot.richtig, #m8Formel .karten-slot.falsch { animation: none; }
+
+/* ============================================
+   Zahlenhaeuser: Die Stiftestrasse
+   ============================================ */
+.zahlenhaus { max-width: 560px; margin: 0 auto 18px; }
+.zh-dach {
+    height: 60px; margin: 0 auto;
+    background: var(--color-modul9); color: #fff;
+    display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px;
+    font-size: 2rem; font-weight: 700;
+    clip-path: polygon(10% 0%, 90% 0%, 100% 100%, 0% 100%);
+}
+/* Die Huelle unter dem Dach - bei Stufe 1/2 ein einzelnes Stockwerk,
+   bei Stufe 3/4 mehrere gestapelte. */
+.zh-haus-koerper {
+    border: 3px solid var(--color-modul9); border-top: none;
+    border-radius: 0 0 16px 16px; background: #fdfaf7;
+    padding: 14px; display: flex; flex-direction: column; gap: 12px;
+}
+.zh-stockwerk { display: flex; align-items: center; gap: 10px; }
+.zh-stockwerk:not(:last-child) { border-bottom: 2px solid var(--color-modul9-light); padding-bottom: 12px; }
+.zh-stockwerk.floor-richtig { background: #e8f5e9; border-radius: 10px; }
+.zh-stockwerk.floor-falsch { background: #ffebee; border-radius: 10px; }
+.zh-stockwerk .zh-zimmer { flex: 1; min-width: 0; max-width: none; margin: 0; padding: 8px; }
+.zh-zimmer .objekt-platz { font-size: clamp(1.1rem, 5vw, 1.8rem); }
+.zh-zimmer .objekt-platz.voll { border-style: solid; border-color: var(--color-modul9-light); background: #fff; cursor: default; }
+.zh-mitte { font-size: 1.6rem; font-weight: 700; color: var(--color-modul9); flex-shrink: 0; }
+
+/* Stufe 2/4: Zahlen statt Stifte in den Zimmern. */
+.zh-zahl-zimmer {
+    flex: 1; min-width: 0; min-height: 70px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.2rem; font-weight: 700; color: var(--color-modul9);
+    background: #fff; border: 3px solid var(--color-modul9-light); border-radius: 14px;
+}
+.zh-slot { border-style: dashed; border-color: var(--color-modul9); cursor: default; }
+.zh-slot.zh-slot-aktiv { --pulse-farbe: var(--color-modul9-light); animation: punkt-ziel-pulsieren 1s ease-in-out infinite; }
+.zh-slot.richtig { animation: none; border-style: solid; border-color: #2e7d32; background: #e8f5e9; color: #2e7d32; }
+.zh-slot.falsch { animation: none; border-style: solid; border-color: #c62828; background: #ffebee; color: #c62828; }
+
+/* Stufe 4: mehrere Stockwerke mit Zahlen - kleinere Zimmer, pro
+   Stockwerk ein eigener kleiner Kartentisch direkt daneben. */
+#zhS4Stockwerke .zh-zahl-zimmer { min-height: 50px; font-size: 1.6rem; }
+.zh-mini-tisch { display: flex; gap: 6px; flex-wrap: wrap; flex-shrink: 0; justify-content: center; }
+.zahl-karte-mini {
+    width: 38px; height: 38px; border-radius: 10px; border: none;
+    background: #fff; box-shadow: 0 2px 6px rgba(0,0,0,.18);
+    display: flex; align-items: center; justify-content: center;
+    font-family: inherit; font-weight: 700; font-size: 1.1rem; color: #37474f;
+    cursor: pointer; transition: transform .12s;
+}
+.zahl-karte-mini:hover { transform: translateY(-2px); }
+
+/* Eichhoernchen-Sprechblase fuer Rueckmeldungen. */
+.eichhoernchen { display: flex; align-items: flex-start; gap: 12px; margin: 18px auto 0; max-width: 460px; text-align: left; }
+.eichhoernchen-icon { font-size: 2.4rem; flex-shrink: 0; display: inline-block; transform: scaleX(-1); }
+.eichhoernchen-text {
+    position: relative; background: #fdf6ec; border: 2px solid var(--color-modul9-light);
+    border-radius: 16px; padding: 12px 16px; font-weight: 600; color: #333; flex: 1;
+}
+.eichhoernchen-text::before {
+    content: ''; position: absolute; left: -10px; top: 14px;
+    border-width: 8px 10px 8px 0; border-style: solid;
+    border-color: transparent var(--color-modul9-light) transparent transparent;
+}
+.eichhoernchen-text.richtig { color: #2e7d32; border-color: #a5d6a7; }
+.eichhoernchen-text.falsch { color: #c62828; border-color: #ef9a9a; }
+
+/* Stufe 4: reine Textrueckmeldung ohne Eichhoernchen und Sprechblase. */
+.zh-s4-feedback { margin: 18px auto 0; max-width: 460px; font-weight: 600; color: #333; }
+.zh-s4-feedback.richtig { color: #2e7d32; }
+.zh-s4-feedback.falsch { color: #c62828; }
 
 /* Konfetti */
 .konfetti {
