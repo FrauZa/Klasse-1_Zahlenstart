@@ -2858,8 +2858,10 @@ function zhS4Weiter() {
    16. Kopfrechnen: Plus und Minus, Zahlenraum waehlbar
 
    Reine Kopfrechenaufgabe ohne Bild - die Aufgabe steht da, das Kind
-   tippt die richtige Zahl unter mehreren Optionen an. Feste Runde mit
-   RUNDE_AUFGABEN Aufgaben, danach der gemeinsame Ergebnisbildschirm.
+   tippt die richtige Zahl unter mehreren Optionen an. Die Runde laeuft
+   immer die vollen KR_RUNDENZEIT Sekunden, egal wie viele Aufgaben das
+   sind - danach der gemeinsame Ergebnisbildschirm mit allen richtigen
+   und falschen Antworten.
    ============================================================ */
 
 const KR_RUNDENZEIT = 120; // 2 Minuten pro Runde
@@ -2903,12 +2905,9 @@ function krRundeBeenden() {
 }
 
 function krNeu() {
+    /* Keine feste Aufgabenzahl mehr - die Runde laeuft immer die vollen
+       KR_RUNDENZEIT Sekunden, krRundeBeenden() uebernimmt den Abschluss. */
     kr.aufgabe++;
-    if (kr.aufgabe > RUNDE_AUFGABEN) {
-        krRundenTimerStoppen();
-        zeigeErgebnis('Kopfrechnen', kr.richtig, RUNDE_AUFGABEN, 'modul10-color', krStart);
-        return;
-    }
 
     const raum = einstellungen.kr.raum;
     const art = einstellungen.kr.art === 'gemischt' ? zufallAus(['plus', 'minus']) : einstellungen.kr.art;
