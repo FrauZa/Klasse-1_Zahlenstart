@@ -255,7 +255,9 @@ function wuerfelSVG(augen) {
 
 function wuerfelbildHTML(n) {
     if (n <= 6) return `<div class="dice-container">${wuerfelSVG(n)}</div>`;
-    // Ab sieben bleibt die Fuenf als Buendel sichtbar, der zweite Wuerfel zeigt den Rest.
+    // Ab sieben bleibt die Fuenf als Buendel sichtbar, der zweite Wuerfel zeigt den Rest -
+    // ausser bei der Zwoelf, da gaebe es sonst einen Wuerfel mit sieben Augen (gibt es nicht).
+    if (n === 12) return `<div class="dice-container">${wuerfelSVG(6)}${wuerfelSVG(6)}</div>`;
     return `<div class="dice-container">${wuerfelSVG(5)}${wuerfelSVG(n - 5)}</div>`;
 }
 
@@ -723,7 +725,7 @@ function pfadAusSpur(spur) {
 }
 
 /* Ziffern, die im Unterricht schon eingefuehrt wurden. Weitere hier ergaenzen. */
-const M2_FREIGEGEBEN = [8];
+const M2_FREIGEGEBEN = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
 
 function m2Aufbauen() {
     const gitter = document.getElementById('m2ZiffernGitter');
