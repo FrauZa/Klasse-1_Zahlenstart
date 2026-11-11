@@ -292,6 +292,7 @@ body {
 }
 .ziffer-kachel:hover:not(:disabled) { transform: translateY(-3px); box-shadow: var(--shadow-hover); }
 .ziffer-kachel:disabled { background: #e0e0e0; color: #9e9e9e; box-shadow: none; cursor: not-allowed; }
+.ziffer-kachel.breit { font-size: 1.8rem; }
 
 .ziffer-blatt {
     display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px;
@@ -308,6 +309,7 @@ body {
     touch-action: none;   /* sonst scrollt das Tablet statt zu schreiben */
     cursor: crosshair;
 }
+.ziffer-svg.breit { aspect-ratio: 224 / 156; }
 .ziffer-hilfslinie { stroke: #e0e0e0; stroke-width: 1.2; stroke-dasharray: 5 5; }
 .ziffer-bahn { fill: none; stroke: #dfe6ec; stroke-width: 20; stroke-linecap: round; stroke-linejoin: round; }
 .ziffer-bahn.blass { stroke: #f2f5f8; }

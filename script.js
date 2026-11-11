@@ -651,6 +651,18 @@ const ZIFFERN = {
     }
 };
 
+/* Die Zehn: dieselbe Eins und dieselbe Null wie einzeln, nur die Null
+   um ein ganzes Ziffernfeld (100) nach rechts verschoben, damit beide
+   nebeneinander Platz haben. Das Schreibfeld wird dafuer breiter. */
+ZIFFERN[10] = {
+    spruch: 'Erst die Eins, dann daneben die Null: die Zehn.',
+    striche: [
+        ZIFFERN[1].striche[0],
+        ZIFFERN[0].striche[0].map(p => [p[0] + 100, p[1]])
+    ],
+    breit: true
+};
+
 const M2_TOLERANZ = 15;         // so nah muss der Finger am Kontrollpunkt sein
 const M2_START_TOLERANZ = 20;   // beim gruenen Startpunkt etwas grosszuegiger
 const M2_BAHN_TOLERANZ = 24;    // ausserhalb dieser Entfernung ist es kein Nachspuren
@@ -725,13 +737,13 @@ function pfadAusSpur(spur) {
 }
 
 /* Ziffern, die im Unterricht schon eingefuehrt wurden. Weitere hier ergaenzen. */
-const M2_FREIGEGEBEN = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+const M2_FREIGEGEBEN = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 function m2Aufbauen() {
     const gitter = document.getElementById('m2ZiffernGitter');
-    const reihenfolge = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+    const reihenfolge = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
     gitter.innerHTML = reihenfolge.map(z => M2_FREIGEGEBEN.includes(z)
-        ? `<button class="ziffer-kachel" onclick="m2Start(${z})">${z}</button>`
+        ? `<button class="ziffer-kachel${z >= 10 ? ' breit' : ''}" onclick="m2Start(${z})">${z}</button>`
         : `<button class="ziffer-kachel" disabled title="Kommt bald">${z}</button>`).join('');
 }
 
@@ -846,12 +858,15 @@ function m2Neu() {
 function m2Zeichnen() {
     const daten = ZIFFERN[m2.ziffer];
     const blatt = document.getElementById('m2Blatt');
+    const breit = !!daten.breit;
+    const viewBox = breit ? '-12 -8 224 156' : '-12 -8 124 156';
+    const hilfslinieX2 = breit ? 208 : 108;
     let felder = '';
 
     for (let feld = 0; feld < 10; feld++) {
         let html = '';
-        html += '<line class="ziffer-hilfslinie" x1="-8" y1="14" x2="108" y2="14"/>';
-        html += '<line class="ziffer-hilfslinie" x1="-8" y1="126" x2="108" y2="126"/>';
+        html += `<line class="ziffer-hilfslinie" x1="-8" y1="14" x2="${hilfslinieX2}" y2="14"/>`;
+        html += `<line class="ziffer-hilfslinie" x1="-8" y1="126" x2="${hilfslinieX2}" y2="126"/>`;
 
         daten.striche.forEach(s => {
             html += `<path class="ziffer-bahn${m2.ohneHilfe ? ' blass' : ''}" d="${pfadAus(s)}"/>`;
@@ -874,7 +889,7 @@ function m2Zeichnen() {
             html = html.replace(`id="m2Spur${feld}_${strich}" d=""`, `id="m2Spur${feld}_${strich}" d="${spur}"`);
         });
         const erledigt = gespeicherteSpuren.length === daten.striche.length;
-        felder += `<div class="ziffer-schreibfeld${feld === m2.feld ? ' aktiv' : ''}${erledigt ? ' erledigt' : ''}" data-feld="${feld}"><svg id="m2Svg_${feld}" class="ziffer-svg" viewBox="-12 -8 124 156" aria-label="Schreibfeld ${feld + 1}">${html}</svg></div>`;
+        felder += `<div class="ziffer-schreibfeld${feld === m2.feld ? ' aktiv' : ''}${erledigt ? ' erledigt' : ''}" data-feld="${feld}"><svg id="m2Svg_${feld}" class="ziffer-svg${breit ? ' breit' : ''}" viewBox="${viewBox}" aria-label="Schreibfeld ${feld + 1}">${html}</svg></div>`;
     }
     blatt.innerHTML = felder;
     m2Marken();
