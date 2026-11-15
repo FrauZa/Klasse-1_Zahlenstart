@@ -105,6 +105,20 @@
                     </button>
                 </div>
             </section>
+
+            <section class="module-group">
+                <div class="module-group-heading">
+                    <span class="group-icon">🔢</span>
+                    <div><h2>Zahlenreihen</h2><p>Reihen fortsetzen, Nachbarn finden.</p></div>
+                </div>
+                <div class="button-grid">
+                    <button class="operation-btn modul11" onclick="showScreen('zrSetupScreen')">
+                        <span class="emoji">🔢➡️</span>
+                        <span class="text">Zahlenreihen</span>
+                        <span class="card-hint">Reihen fortsetzen und Nachbarn finden</span>
+                    </button>
+                </div>
+            </section>
         </div>
     </div>
 
@@ -532,6 +546,69 @@
 
 
     <!-- ============================================
+         Modul: Zahlenreihen
+         ============================================ -->
+    <div id="zrSetupScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('startScreen')"><span class="arrow">←</span> Zurück</button>
+        </div>
+        <div class="content">
+            <div class="mode-selection-container modul11-border">
+                <h2 class="exercise-title modul11-color">Zahlenreihen</h2>
+                <p class="description">Ergänze die Reihe oder finde den Nachbarn einer Zahl.</p>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">Wie möchtest du üben?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'zr','modus','eigen')">🌿 Eigenes Tempo</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'zr','modus','zeit')">⚡ Auf Zeit</button>
+                    </div>
+                </div>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">Was möchtest du üben?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn" onclick="setzeWahl(this,'zr','art','vorwaerts')">➡️ Vorwärts zählen</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'zr','art','rueckwaerts')">⬅️ Rückwärts zählen</button>
+                        <button class="wahl-btn" onclick="setzeWahl(this,'zr','art','nachbar')">↔️ Vorgänger &amp; Nachfolger</button>
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'zr','art','gemischt')">🔀 Gemischt</button>
+                    </div>
+                </div>
+
+                <div class="wahl-block">
+                    <span class="wahl-titel">Zahlenraum?</span>
+                    <div class="wahl-reihe">
+                        <button class="wahl-btn aktiv" onclick="setzeWahl(this,'zr','raum',10)"><span class="wahl-symbol">★★</span> bis 10</button>
+                    </div>
+                </div>
+
+                <div class="button-area">
+                    <button class="check-btn modul11-btn" onclick="zrStart()">Los geht es!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modul Zahlenreihen: Übung -->
+    <div id="zrGameScreen" class="screen">
+        <div class="header">
+            <button class="back-btn" onclick="showScreen('zrSetupScreen')"><span class="arrow">←</span> Zurück</button>
+            <button class="tool-btn vorlese-toggle" onclick="vorlesenAktuelleAufgabe()" aria-label="Aufgabe vorlesen" title="Aufgabe vorlesen">🔊</button>
+            <div class="progress">⭐ <span id="zrScore">0</span> / <span id="zrNummer">1</span></div>
+            <div class="progress" id="zrZeit" hidden>⏱ Restzeit: <span id="zrZeitWert">2:00</span></div>
+        </div>
+        <div class="content">
+            <div class="task-area modul11-border">
+                <h2 class="exercise-title modul11-color" id="zrPrompt">Ergänze die Reihe.</h2>
+                <div id="zrKette" class="zr-kette"></div>
+                <div id="zrOptionen" class="zahl-optionen"></div>
+                <p id="zrFeedback" class="feedback-text"></p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ============================================
          Zahlenhäuser: Die Stiftestraße
          ============================================ -->
     <div id="zhSelectScreen" class="screen">
@@ -722,6 +799,6 @@
         </div>
     </div>
 
-    <script src="script.js?v=20261111b"></script>
+    <script src="script.js?v=20261115g"></script>
 </body>
 </html>

@@ -16,6 +16,7 @@
     --color-modul8-blau: #1565C0; --color-modul8-blau-light: #BBDEFB; /* blau - Minusrechner: Subtrahend / weggenommen (statt gruen, wegen Rot-Gruen-Schwaeche) */
     --color-modul9: #8D6E63;  --color-modul9-light: #D7CCC8;   /* braun   - Zahlenhaeuser: Stiftestrasse */
     --color-modul10: #F9A825; --color-modul10-light: #FFECB3; /* gold    - Kopfrechnen */
+    --color-modul11: #00ACC1; --color-modul11-light: #B2EBF2; /* zyan    - Zahlenreihen */
 
     --color-akzent: #f57c00;
     --color-text: #333;
@@ -35,6 +36,18 @@ body {
     color: var(--color-text);
     background: var(--color-bg);
     overflow-x: hidden;
+}
+
+/* Sieben mit Querstrich (Grundschrift-Konvention, Unterscheidung von der
+   Eins). Script.js verwandelt jede "7" im Text automatisch in dieses
+   Markup - diese Klasse ist nur fuer das Aussehen zustaendig. */
+.ziffer-7-quer { position: relative; display: inline-block; }
+.ziffer-7-quer::after {
+    content: '';
+    position: absolute;
+    left: 12%; right: 12%;
+    bottom: 0.5em;
+    border-top: 0.12em solid currentColor;
 }
 
 .background-placeholder {
@@ -101,6 +114,7 @@ body {
 .modul8 { background: linear-gradient(135deg, #E53935, #FFCDD2); }
 .modul9 { background: linear-gradient(135deg, #8D6E63, #D7CCC8); }
 .modul10 { background: linear-gradient(135deg, #F9A825, #FFECB3); }
+.modul11 { background: linear-gradient(135deg, #00ACC1, #B2EBF2); }
 
 .modul1-color { color: var(--color-modul1); }
 .modul2-color { color: var(--color-modul2); }
@@ -112,6 +126,7 @@ body {
 .modul8-color { color: var(--color-modul8); }
 .modul9-color { color: var(--color-modul9); }
 .modul10-color { color: var(--color-modul10); }
+.modul11-color { color: var(--color-modul11); }
 
 .modul1-border { border: 3px solid var(--color-modul1); }
 .modul2-border { border: 3px solid var(--color-modul2); }
@@ -123,6 +138,7 @@ body {
 .modul8-border { border: 3px solid var(--color-modul8); }
 .modul9-border { border: 3px solid var(--color-modul9); }
 .modul10-border { border: 3px solid var(--color-modul10); }
+.modul11-border { border: 3px solid var(--color-modul11); }
 
 .modul1-btn { background: var(--color-modul1); color: #fff; }
 .modul2-btn { background: var(--color-modul2); color: #fff; }
@@ -134,6 +150,7 @@ body {
 .modul8-btn { background: var(--color-modul8); color: #fff; }
 .modul9-btn { background: var(--color-modul9); color: #fff; }
 .modul10-btn { background: var(--color-modul10); color: #fff; }
+.modul11-btn { background: var(--color-modul11); color: #fff; }
 .modul3-bg { background: var(--color-modul3); color: #fff; }
 .modul6-bg { background: var(--color-modul6); color: #fff; }
 .modul7-bg { background: var(--color-modul7); color: #fff; }
@@ -171,6 +188,7 @@ body {
 .check-btn.modul8-btn, .next-btn.modul8-btn { background: var(--color-modul8); color: #fff; }
 .check-btn.modul9-btn, .next-btn.modul9-btn { background: var(--color-modul9); color: #fff; }
 .check-btn.modul10-btn, .next-btn.modul10-btn { background: var(--color-modul10); color: #fff; }
+.check-btn.modul11-btn, .next-btn.modul11-btn { background: var(--color-modul11); color: #fff; }
 
 .back-btn {
     font-family: inherit; font-size: 1rem; font-weight: 600;
@@ -211,6 +229,7 @@ body {
 }
 .wahl-btn:hover { border-color: #bdbdbd; }
 .wahl-btn.aktiv { border-color: var(--color-akzent); background: #fff3e0; color: #e65100; }
+.wahl-btn:disabled { background: #e0e0e0; color: #9e9e9e; cursor: not-allowed; filter: grayscale(1); }
 
 /* Ergebnis */
 .result-card { background: rgba(255,255,255,.96); border-radius: 22px; padding: 30px; box-shadow: var(--shadow); }
@@ -618,6 +637,20 @@ body {
 .zh-s4-feedback { margin: 18px auto 0; max-width: 460px; font-weight: 600; color: #333; }
 .zh-s4-feedback.richtig { color: #2e7d32; }
 .zh-s4-feedback.falsch { color: #c62828; }
+
+/* ============================================
+   Modul: Zahlenreihen
+   ============================================ */
+.zr-kette { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+.zr-kasten {
+    min-width: 60px; min-height: 60px; padding: 0 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.9rem; font-weight: 700; color: var(--color-modul11);
+    background: #fff; border: 3px solid var(--color-modul11-light); border-radius: 14px;
+}
+.zr-kasten-leer { border-style: dashed; border-color: var(--color-modul11); --pulse-farbe: var(--color-modul11-light); animation: punkt-ziel-pulsieren 1s ease-in-out infinite; }
+.zr-kasten.richtig { animation: none; border-style: solid; border-color: #2e7d32; background: #e8f5e9; color: #2e7d32; }
+.zr-kasten.falsch { animation: none; border-style: solid; border-color: #c62828; background: #ffebee; color: #c62828; }
 
 /* Konfetti */
 .konfetti {

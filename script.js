@@ -18,6 +18,7 @@
     14. Zahlenhaeuser   - Stiftestrasse Stufe 3 (mehrere Stockwerke, Stifte)
     15. Zahlenhaeuser   - Stiftestrasse Stufe 4 (mehrere Stockwerke, Zahlen)
     16. Kopfrechnen     - Plus/Minus bis 6 oder 10, Zahl antippen
+    17. Zahlenreihen    - Reihen fortsetzen, Vorgaenger/Nachfolger
 
    Erstklaesser lesen noch nicht. Darum wird jede Aufgabenstellung
    vorgelesen und jede Rueckmeldung bleibt kurz und bildhaft.
@@ -44,6 +45,7 @@ function showScreen(screenId) {
     if (m2.ziffernTimer) { clearInterval(m2.ziffernTimer); m2.ziffernTimer = null; }
     if (m3.rundenTimer) { clearInterval(m3.rundenTimer); m3.rundenTimer = null; }
     if (kr.rundenTimer) { clearInterval(kr.rundenTimer); kr.rundenTimer = null; }
+    if (zr.rundenTimer) { clearInterval(zr.rundenTimer); zr.rundenTimer = null; }
     if (zh.rundenTimer) { clearInterval(zh.rundenTimer); zh.rundenTimer = null; }
     if (zh2.rundenTimer) { clearInterval(zh2.rundenTimer); zh2.rundenTimer = null; }
     if (zh3.rundenTimer) { clearInterval(zh3.rundenTimer); zh3.rundenTimer = null; }
@@ -55,6 +57,58 @@ function showScreen(screenId) {
     const ziel = document.getElementById(screenId);
     if (ziel) ziel.classList.add('active');
     window.scrollTo(0, 0);
+}
+
+/* ---------- Sieben mit Querstrich ---------- */
+/* In der Grundschrift bekommt die Sieben einen Querstrich, damit sie sich
+   von der Eins unterscheidet. Ziffern entstehen an sehr vielen Stellen im
+   Code immer wieder neu (Aufgabentexte, Zahlknoepfe, Punktestand ...).
+   Statt an jeder einzelnen Stelle den Text selbst zu veraendern, wird
+   jede neu eingefuegte "7" per MutationObserver automatisch in dieses
+   Markup verwandelt - das Aussehen uebernimmt die CSS-Klasse. */
+function querstricheAnwenden(wurzel) {
+    const walker = document.createTreeWalker(wurzel, NodeFilter.SHOW_TEXT, {
+        acceptNode(knoten) {
+            if (!knoten.nodeValue.includes('7')) return NodeFilter.FILTER_REJECT;
+            const eltern = knoten.parentElement;
+            if (!eltern || eltern.closest('.ziffer-7-quer, script, style, svg')) return NodeFilter.FILTER_REJECT;
+            return NodeFilter.FILTER_ACCEPT;
+        }
+    });
+    const textKnoten = [];
+    let n;
+    while ((n = walker.nextNode())) textKnoten.push(n);
+
+    textKnoten.forEach(knoten => {
+        const stueck = document.createDocumentFragment();
+        const teile = knoten.nodeValue.split('7');
+        teile.forEach((teil, i) => {
+            if (teil) stueck.appendChild(document.createTextNode(teil));
+            if (i < teile.length - 1) {
+                const spanne = document.createElement('span');
+                spanne.className = 'ziffer-7-quer';
+                spanne.textContent = '7';
+                stueck.appendChild(spanne);
+            }
+        });
+        knoten.parentNode.replaceChild(stueck, knoten);
+    });
+}
+
+if (typeof MutationObserver !== 'undefined') {
+    new MutationObserver(aenderungen => {
+        aenderungen.forEach(aenderung => {
+            aenderung.addedNodes.forEach(knoten => {
+                if (knoten.nodeType === 1) querstricheAnwenden(knoten);
+                else if (knoten.nodeType === 3 && knoten.nodeValue.includes('7') && knoten.parentElement) querstricheAnwenden(knoten.parentElement);
+            });
+            if (aenderung.type === 'characterData' && aenderung.target.nodeValue
+                && aenderung.target.nodeValue.includes('7') && aenderung.target.parentElement) {
+                querstricheAnwenden(aenderung.target.parentElement);
+            }
+        });
+    }).observe(document.body, { childList: true, subtree: true, characterData: true });
+    querstricheAnwenden(document.body);
 }
 
 /* ---------- Vorlesen ---------- */
@@ -182,7 +236,8 @@ const einstellungen = {
     m4: { raum: 10, anzahl: 3, karten: 'zahlen', richtung: 'auf' },
     m5: { raum: 10, gruppen: 3, modus: 'eigen' },
     m6: { raum: 6, art: 'gemischt' },
-    kr: { raum: 10, art: 'gemischt' }
+    kr: { raum: 10, art: 'gemischt' },
+    zr: { raum: 10, art: 'gemischt', modus: 'eigen' }
 };
 
 function setzeWahl(btn, modul, schluessel, wert) {
@@ -2971,6 +3026,134 @@ function krAntwort(zahl, btn) {
         sprich('Es sind ' + kr.ergebnis + '. Schau noch einmal hin.');
         wartezeit = setTimeout(krNeu, 1600);
     }
+}
+
+
+/* ============================================================
+   17. Modul: Zahlenreihen
+
+   Eine Reihe von Kaestchen, eines davon leer ("?"). Je nach Aufgabenart
+   ist das die Fortsetzung einer Zaehlreihe (vorwaerts oder rueckwaerts
+   ab einer beliebigen Startzahl) oder der Vorgaenger/Nachfolger einer
+   gegebenen Zahl. Die Loesung wird wie beim Kopfrechnen ueber vier
+   Zahlknoepfe angetippt.
+   ============================================================ */
+
+const zr = { aufgabe: 0, gesamt: 0, richtig: 0, kette: [], loesung: 0, aufZeit: false, rundenTimer: null, restzeit: 0 };
+const ZR_RUNDENZEIT = 120;
+
+function zrStart() {
+    zr.aufgabe = 0;
+    zr.gesamt = 0;
+    zr.richtig = 0;
+    showScreen('zrGameScreen');
+    zrNeu();
+    zrRundenTimerStarten();
+}
+
+function zrNeu() {
+    zr.aufgabe++;
+    zr.aufZeit = einstellungen.zr.modus === 'zeit';
+    if (!zr.aufZeit && zr.aufgabe > RUNDE_AUFGABEN) {
+        zrRundenTimerStoppen();
+        zeigeErgebnis('Zahlenreihen', zr.richtig, RUNDE_AUFGABEN, 'modul11-color', zrStart);
+        return;
+    }
+
+    const raum = einstellungen.zr.raum;
+    const art = einstellungen.zr.art === 'gemischt' ? zufallAus(['vorwaerts', 'rueckwaerts', 'nachbar']) : einstellungen.zr.art;
+    let frage;
+
+    if (art === 'vorwaerts') {
+        const start = zufallZahl(0, raum - 4);
+        zr.kette = [start, start + 1, start + 2, start + 3, null];
+        zr.loesung = start + 4;
+        frage = 'Wie geht die Reihe weiter?';
+    } else if (art === 'rueckwaerts') {
+        const start = zufallZahl(4, raum);
+        zr.kette = [start, start - 1, start - 2, start - 3, null];
+        zr.loesung = start - 4;
+        frage = 'Wie geht die Reihe weiter?';
+    } else {
+        const n = zufallZahl(1, raum - 1);
+        if (Math.random() < 0.5) {
+            zr.kette = [null, n];
+            zr.loesung = n - 1;
+            frage = 'Wie heißt der Vorgänger von ' + n + '?';
+        } else {
+            zr.kette = [n, null];
+            zr.loesung = n + 1;
+            frage = 'Wie heißt der Nachfolger von ' + n + '?';
+        }
+    }
+
+    document.getElementById('zrScore').textContent = zr.richtig;
+    document.getElementById('zrNummer').textContent = zr.aufgabe;
+    document.getElementById('zrPrompt').textContent = frage;
+    setzeFeedback('zrFeedback', '');
+
+    document.getElementById('zrKette').innerHTML = zr.kette.map(z =>
+        z === null ? `<div class="zr-kasten zr-kasten-leer">?</div>` : `<div class="zr-kasten">${z}</div>`).join('');
+
+    const optionen = zahlOptionen(zr.loesung, 0, raum).sort((a, b) => a - b);
+    document.getElementById('zrOptionen').innerHTML = optionen.map(z =>
+        `<button class="zahl-option" onclick="zrAntwort(${z}, this)">${z}</button>`).join('');
+
+    sprich(frage);
+}
+
+function zrAntwort(zahl, btn) {
+    document.querySelectorAll('#zrOptionen .zahl-option').forEach(b => b.disabled = true);
+    const leer = document.querySelector('#zrKette .zr-kasten-leer');
+    zr.gesamt++;
+
+    if (zahl === zr.loesung) {
+        btn.classList.add('richtig');
+        if (leer) { leer.textContent = zahl; leer.classList.add('richtig'); }
+        zr.richtig++;
+        document.getElementById('zrScore').textContent = zr.richtig;
+        setzeFeedback('zrFeedback', 'Richtig! Das sind ' + zr.loesung + '. ⭐', 'richtig');
+        sprich('Richtig! Das sind ' + zr.loesung + '.');
+        wartezeit = setTimeout(zrNeu, 900);
+    } else {
+        btn.classList.add('falsch');
+        if (leer) { leer.textContent = zr.loesung; leer.classList.add('falsch'); }
+        document.querySelectorAll('#zrOptionen .zahl-option').forEach(b => {
+            if (Number(b.textContent) === zr.loesung) b.classList.add('richtig');
+        });
+        setzeFeedback('zrFeedback', 'Richtig wären ' + zr.loesung + '.', 'richtig');
+        sprich('Es sind ' + zr.loesung + '. Schau noch einmal hin.');
+        wartezeit = setTimeout(zrNeu, 1600);
+    }
+}
+
+function zrRundenTimerStarten() {
+    zrRundenTimerStoppen();
+    const zeitAnzeige = document.getElementById('zrZeit');
+    const zeitWert = document.getElementById('zrZeitWert');
+    zeitAnzeige.hidden = !zr.aufZeit;
+    if (!zr.aufZeit) return;
+    zr.restzeit = ZR_RUNDENZEIT;
+    zeitWert.textContent = zrZeitText();
+    zr.rundenTimer = setInterval(() => {
+        zr.restzeit--;
+        zeitWert.textContent = zrZeitText();
+        if (zr.restzeit <= 0) zrRundeBeenden();
+    }, 1000);
+}
+
+function zrZeitText() {
+    return Math.floor(zr.restzeit / 60) + ':' + String(zr.restzeit % 60).padStart(2, '0');
+}
+
+function zrRundenTimerStoppen() {
+    if (zr.rundenTimer) { clearInterval(zr.rundenTimer); zr.rundenTimer = null; }
+}
+
+function zrRundeBeenden() {
+    zrRundenTimerStoppen();
+    if (wartezeit) { clearTimeout(wartezeit); wartezeit = null; }
+    zeigeErgebnis('Zahlenreihen', zr.richtig, zr.gesamt, 'modul11-color', zrStart);
 }
 
 
